@@ -1,6 +1,6 @@
-# Idea Space
+# Concept Space
 
-An interactive 3D visual language for exploring ideas, model reach, and training.
+An interactive visual language for exploring concepts, model reach, and learning.
 
 The enclosing sphere represents the space of all possible ideas. An irregular subset represents a model’s conceptual reach, including possibilities it has never actually produced. The same space can be viewed as a surface or as a point cloud, with a shared camera and training timeline.
 

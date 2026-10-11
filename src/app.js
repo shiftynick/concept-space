@@ -39,7 +39,7 @@
     renderer.domElement.setAttribute("role", "img");
     renderer.domElement.setAttribute(
       "aria-label",
-      "Interactive idea space with surface and point views",
+      "Interactive concept space with surface and point views",
     );
     renderer.domElement.setAttribute("aria-describedby", "description");
     const scene = new THREE.Scene(),
@@ -479,7 +479,7 @@
         .querySelector("#comparison-mode")
         .setAttribute("aria-pressed", String(mode === "comparison"));
       root.querySelector(".eyebrow").textContent =
-        "Idea spaces / " +
+        "Concept Space / " +
         (mode === "comparison" ? "model comparison" : "training story");
       comparison.update({ active: mode === "comparison", view });
       syncGeometry();
