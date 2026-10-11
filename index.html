@@ -66,11 +66,37 @@
               <h2 id="collection-title">One space. Many stories.</h2>
             </div>
             <p>
-              Three starting points for exploring<br />how understanding takes
+              Four starting points for exploring<br />how understanding takes
               shape.
             </p>
           </div>
           <div class="scenario-grid">
+            <a
+              href="#encounter"
+              class="scenario-card encounter-card"
+              data-scenario="encounter"
+            >
+              <div class="card-art">
+                <canvas
+                  data-art="encounter"
+                  role="img"
+                  aria-label="Two minds sharing a connection to a newly reachable region"
+                ></canvas
+                ><span class="card-index">NEW / HUMAN CONNECTION</span
+                ><span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+              <div class="card-copy">
+                <span class="card-domain">PEOPLE &amp; CULTURE</span>
+                <h3>When two minds meet</h3>
+                <p>
+                  Find shared ground. Teach, misunderstand, and discover a
+                  possibility neither could reach alone.
+                </p>
+                <span class="card-meta"
+                  >4 moments <span>Explore encounter →</span></span
+                >
+              </div>
+            </a>
             <a href="#training" class="scenario-card" data-scenario="training"
               ><div class="card-art">
                 <canvas
@@ -193,6 +219,7 @@
           </div>
           <label class="scenario-picker"
             >Change perspective<select id="scenario-picker">
+              <option value="encounter">When two minds meet</option>
               <option value="training">How a model learns</option>
               <option value="comparison">Different minds, shared ground</option>
               <option value="society">One person. A whole society.</option>
@@ -217,8 +244,17 @@
               </div>
               <div class="annotation" id="label-a" hidden></div>
               <div class="annotation" id="label-b" hidden></div>
-              <div class="chapter" id="chapter">Islands of possibility</div>
-              <div class="event" id="event">
+              <svg class="note-leader" aria-hidden="true" hidden>
+                <line />
+                <circle r="3" />
+              </svg>
+              <div class="scene-note" id="scene-note" hidden>
+                <strong></strong><span></span>
+              </div>
+              <div class="chapter" id="chapter" hidden>
+                Islands of possibility
+              </div>
+              <div class="event" id="event" hidden>
                 Separate regions emerge within the larger space.
               </div>
               <span class="sr" id="description"
@@ -226,163 +262,244 @@
                 Training shows five illustrative changes during learning. Model
                 Comparison contrasts two fictional models. One Person / Society
                 separates individual knowledge, a living collective, and
-                external memory. The geometry is a metaphor, not measured data.
-                Drag to orbit, scroll to zoom, and use the labeled controls to
-                explore.</span
+                external memory. When two minds meet explores shared
+                understanding, teaching, misunderstanding, and discovery. The
+                geometry is a metaphor, not measured data. Drag to orbit, scroll
+                to zoom, and use the labeled controls to explore.</span
               >
             </div>
-            <div class="controls">
-              <div
-                class="view-switch"
-                role="group"
-                aria-label="Experience"
-                hidden
-              >
-                <button type="button" id="comparison-mode" aria-pressed="true">
-                  Compare models</button
-                ><button type="button" id="training-mode" aria-pressed="false">
-                  Training story
+            <section class="cinematic-story" aria-label="Scenario story">
+              <div class="story-topline">
+                <span class="kicker" id="story-context">THE STORY SO FAR</span
+                ><span id="story-count">01 / 04</span
+                ><button
+                  type="button"
+                  id="story-collapse"
+                  aria-expanded="true"
+                  aria-controls="story-detail"
+                >
+                  Hide story −
                 </button>
               </div>
-              <div class="view-switch" role="group" aria-label="Representation">
-                <button type="button" id="points-view" aria-pressed="true">
-                  Points</button
-                ><button type="button" id="surface-view" aria-pressed="false">
-                  Surface</button
-                ><span>Same space · same camera</span>
-              </div>
-              <div id="comparison-controls">
+              <div id="story-detail">
                 <div
-                  class="model-switch"
-                  role="group"
-                  aria-label="Model selection"
+                  class="story-caption"
+                  aria-live="polite"
+                  aria-atomic="true"
                 >
-                  <button type="button" data-model="a" aria-pressed="false">
-                    Model A</button
-                  ><button type="button" data-model="b" aria-pressed="false">
-                    Model B</button
-                  ><button type="button" data-model="both" aria-pressed="true">
-                    Both</button
-                  ><label for="region-filter"
-                    >Show
-                    <select id="region-filter">
-                      <option value="all">All regions</option>
-                      <option value="2">Shared reach</option>
-                      <option value="0">A only</option>
-                      <option value="1">B only</option>
-                    </select></label
+                  <h2 id="story-title"></h2>
+                  <p id="story-copy"></p>
+                  <p class="watch-cue">
+                    <span>WATCH FOR</span> <span id="story-notice"></span>
+                  </p>
+                </div>
+                <div class="story-progress" aria-hidden="true">
+                  <i id="story-progress-fill"></i>
+                </div>
+                <div class="story-toolbar">
+                  <div class="story-actions">
+                    <button
+                      type="button"
+                      id="story-prev"
+                      class="next-button"
+                      aria-label="Previous story moment"
+                    >
+                      ←
+                    </button>
+                    <button type="button" id="story-play" class="primary-link">
+                      Play moment <span aria-hidden="true">▶</span>
+                    </button>
+                    <button
+                      type="button"
+                      id="story-next"
+                      class="next-button"
+                      aria-label="Next story moment"
+                    >
+                      →
+                    </button>
+                  </div>
+                  <span id="story-status" role="status"
+                    >Paused · take your time</span
+                  ><label class="auto-advance"
+                    ><input
+                      type="checkbox"
+                      id="story-auto"
+                    />Auto-advance</label
                   >
                 </div>
-                <p class="comparison-note">
-                  Illustrative models · shared coordinates · brightness and
-                  point concentration suggest density
-                </p>
-              </div>
-              <div id="society-controls" hidden>
                 <div
-                  class="model-switch"
+                  id="story-steps"
+                  class="story-steps"
                   role="group"
-                  aria-label="Knowledge scope"
+                  aria-label="Story moments"
+                ></div>
+              </div>
+              <p
+                class="collapsed-story-title"
+                id="collapsed-story-title"
+                hidden
+              ></p>
+            </section>
+            <details class="scene-tools" id="scene-tools">
+              <summary>
+                Scene controls <span aria-hidden="true">＋</span>
+              </summary>
+              <div class="controls">
+                <div
+                  class="view-switch"
+                  role="group"
+                  aria-label="Experience"
+                  hidden
                 >
-                  <button type="button" data-scope="person" aria-pressed="true">
-                    One person</button
+                  <button
+                    type="button"
+                    id="comparison-mode"
+                    aria-pressed="true"
+                  >
+                    Compare models</button
                   ><button
                     type="button"
-                    data-scope="society"
+                    id="training-mode"
                     aria-pressed="false"
                   >
-                    Society</button
-                  ><button type="button" data-scope="both" aria-pressed="false">
-                    Together
+                    Training story
                   </button>
                 </div>
-                <label class="memory-toggle"
-                  ><input id="external-memory" type="checkbox" />Include
-                  external memory
-                  <span>Records, tools &amp; institutions</span></label
-                >
-              </div>
-              <div id="training-controls" hidden>
-                <div class="timeline-head">
-                  <label for="training">Training progression</label
-                  ><span id="phase" aria-live="polite">Early training</span>
-                </div>
-                <div class="transport">
-                  <button type="button" id="play">Pause</button
-                  ><input
-                    id="training"
-                    aria-label="Illustrative training progression"
-                    type="range"
-                    min="0"
-                    max="1000"
-                    value="160"
-                  />
-                </div>
                 <div
-                  class="chapters"
+                  class="view-switch"
                   role="group"
-                  aria-label="Training chapters"
+                  aria-label="Representation"
                 >
-                  <button type="button" data-chapter="0">1 · Emerge</button
-                  ><button type="button" data-chapter="1">2 · Connect</button
-                  ><button type="button" data-chapter="2">3 · Enrich</button
-                  ><button type="button" data-chapter="3">4 · Fill gaps</button
-                  ><button type="button" data-chapter="4">5 · Fine-tune</button>
+                  <button type="button" id="points-view" aria-pressed="true">
+                    Points</button
+                  ><button type="button" id="surface-view" aria-pressed="false">
+                    Surface</button
+                  ><span>Same space · same camera</span>
+                </div>
+                <div id="comparison-controls">
+                  <div
+                    class="model-switch"
+                    role="group"
+                    aria-label="Model selection"
+                  >
+                    <button type="button" data-model="a" aria-pressed="false">
+                      Model A</button
+                    ><button type="button" data-model="b" aria-pressed="false">
+                      Model B</button
+                    ><button
+                      type="button"
+                      data-model="both"
+                      aria-pressed="true"
+                    >
+                      Both</button
+                    ><label for="region-filter"
+                      >Show
+                      <select id="region-filter">
+                        <option value="all">All regions</option>
+                        <option value="2">Shared reach</option>
+                        <option value="0">A only</option>
+                        <option value="1">B only</option>
+                      </select></label
+                    >
+                  </div>
+                  <p class="comparison-note">
+                    Illustrative models · shared coordinates · brightness and
+                    point concentration suggest density
+                  </p>
+                </div>
+                <div id="society-controls" hidden>
+                  <div
+                    class="model-switch"
+                    role="group"
+                    aria-label="Knowledge scope"
+                  >
+                    <button
+                      type="button"
+                      data-scope="person"
+                      aria-pressed="true"
+                    >
+                      One person</button
+                    ><button
+                      type="button"
+                      data-scope="society"
+                      aria-pressed="false"
+                    >
+                      Society</button
+                    ><button
+                      type="button"
+                      data-scope="both"
+                      aria-pressed="false"
+                    >
+                      Together
+                    </button>
+                  </div>
+                  <label class="memory-toggle"
+                    ><input id="external-memory" type="checkbox" />Include
+                    external memory
+                    <span>Records, tools &amp; institutions</span></label
+                  >
+                </div>
+                <div id="training-controls" hidden>
+                  <div class="timeline-head">
+                    <label for="training">Training progression</label
+                    ><span id="phase" aria-live="polite">Early training</span>
+                  </div>
+                  <div class="transport">
+                    <button type="button" id="play">Pause</button
+                    ><input
+                      id="training"
+                      aria-label="Illustrative training progression"
+                      type="range"
+                      min="0"
+                      max="1000"
+                      value="160"
+                    />
+                  </div>
+                  <div
+                    class="chapters"
+                    role="group"
+                    aria-label="Training chapters"
+                  >
+                    <button type="button" data-chapter="0">1 · Emerge</button
+                    ><button type="button" data-chapter="1">2 · Connect</button
+                    ><button type="button" data-chapter="2">3 · Enrich</button
+                    ><button type="button" data-chapter="3">
+                      4 · Fill gaps</button
+                    ><button type="button" data-chapter="4">
+                      5 · Fine-tune
+                    </button>
+                  </div>
+                </div>
+                <div class="footer">
+                  <label
+                    ><input type="checkbox" id="scene-notes" checked />Scene
+                    notes</label
+                  >
+                  <span>Illustrative, not measured</span
+                  ><label
+                    ><input
+                      type="checkbox"
+                      id="rotate"
+                      checked
+                    />Auto-orbit</label
+                  ><span>Drag to orbit · scroll to zoom</span>
                 </div>
               </div>
-              <div class="footer">
-                <span>Illustrative, not measured</span
-                ><label
-                  ><input
-                    type="checkbox"
-                    id="rotate"
-                    checked
-                  />Auto-orbit</label
-                ><span>Drag to orbit · scroll to zoom</span>
+              <div class="story-extras">
+                <button type="button" id="free-explore" class="text-button">
+                  Explore freely ↗
+                </button>
+                <details class="assumptions">
+                  <summary>How to read this scene</summary>
+                  <p id="scenario-assumptions"></p>
+                  <p>
+                    These shapes are illustrative. Their sizes, positions, and
+                    densities are not measurements.
+                  </p>
+                </details>
               </div>
-            </div>
-          </div>
-          <aside class="story-panel" aria-label="Scenario guide">
-            <div class="story-topline">
-              <span class="kicker">A GUIDED PERSPECTIVE</span
-              ><span id="story-count">01 / 05</span>
-            </div>
-            <h2 id="story-title">Islands emerge</h2>
-            <p id="story-copy"></p>
-            <div class="story-actions">
-              <button type="button" id="story-play" class="primary-link">
-                Play story <span aria-hidden="true">▶</span></button
-              ><button
-                type="button"
-                id="story-next"
-                class="next-button"
-                aria-label="Next story moment"
-              >
-                →
-              </button>
-            </div>
-            <div
-              id="story-steps"
-              class="story-steps"
-              role="group"
-              aria-label="Story moments"
-            ></div>
-            <div class="notice">
-              <span class="kicker">LOOK CLOSER</span>
-              <p id="story-notice"></p>
-            </div>
-            <button type="button" id="free-explore" class="text-button">
-              Explore freely ↗
-            </button>
-            <details class="assumptions">
-              <summary>How to read this scene</summary>
-              <p id="scenario-assumptions"></p>
-              <p>
-                These shapes are illustrative. Their sizes, positions, and
-                densities are not measurements.
-              </p>
             </details>
-          </aside>
+          </div>
         </div>
         <div class="viewer-end">
           <span>There’s more than one way to see it.</span
@@ -403,6 +520,8 @@
     <script src="vendor/three/three.min.js"></script>
     <script src="src/comparison.js"></script>
     <script src="src/society.js"></script>
+    <script src="src/encounter.js"></script>
+    <script src="src/story-clock.js"></script>
     <script src="src/app.js"></script>
     <script src="src/site.js"></script>
   </body>

@@ -21,7 +21,7 @@
       view = "points",
       yaw = 0.08,
       pitch = 0.06,
-      zoom = 4.55,
+      zoom = 3.7,
       drag = false,
       lastX = 0,
       lastY = 0,
@@ -365,6 +365,26 @@
       extractSurface: buildSurface,
       dpr: renderer.getPixelRatio(),
     });
+    const encounter = window.createEncounter({
+      THREE,
+      world,
+      candidates,
+      extractSurface: buildSurface,
+      dpr: renderer.getPixelRatio(),
+    });
+    let sceneNote = null;
+    const noteElement = root.querySelector("#scene-note"),
+      noteLeader = root.querySelector(".note-leader"),
+      notesToggle = root.querySelector("#scene-notes");
+    function setSceneNote(note) {
+      sceneNote = note;
+      noteElement.hidden = !note;
+      noteLeader.hidden = !note;
+      if (note) {
+        noteElement.querySelector("strong").textContent = note.title;
+        noteElement.querySelector("span").textContent = note.text;
+      }
+    }
     function syncGeometry(force = false) {
       const key = configure(t);
       uniforms.uEnrich.value = enrich;
@@ -397,23 +417,18 @@
       "The left opening closes while the right opening remains.",
       "The upper-right region expands; the lower-left island recedes.",
     ];
-    const labelSpecs = [
-      [],
-      [{ text: "Connecting", p: [-0.02, -0.02, 0.07] }],
-      [{ text: "Denser · same extent", p: [-0.36, 0.38, 0.32] }],
-      [
-        { text: "Fills", p: [-0.34, 0.36, 0.2] },
-        { text: "Stays open", p: [0.3, -0.43, 0.2] },
-      ],
-      [
-        { text: "Expands", p: [0.6, 0.39, 0.15] },
-        { text: "Recedes", p: [-0.57, -0.4, 0.1] },
-      ],
-    ];
     function chapterIndex() {
       return Math.min(4, Math.floor(t * 5));
     }
     function updateUI() {
+      if (mode === "encounter") {
+        legend.parentElement.hidden = true;
+        const ml = root.querySelector("#model-legend");
+        ml.hidden = false;
+        ml.innerHTML =
+          '<span><i class="swatch-mara"></i>Mara’s reach</span><span><i class="swatch-eli"></i>Eli’s reach</span><span><i class="swatch-together"></i>Shared reach</span>';
+        return;
+      }
       if (mode === "society") {
         societyUI();
         return;
@@ -460,8 +475,8 @@
         state.selection === "both"
           ? '<span><i class="swatch-a"></i>A only</span><span><i class="swatch-b"></i>B only</span><span><i class="swatch-shared"></i>Shared</span>'
           : state.selection === "a"
-            ? '<span><i class="swatch-a"></i>Model A · reachable territory</span>'
-            : '<span><i class="swatch-b"></i>Model B · reachable territory</span>';
+            ? '<span><i class="swatch-a"></i>Model A</span>'
+            : '<span><i class="swatch-b"></i>Model B</span>';
       filterSelect.querySelector('option[value="0"]').disabled =
         state.selection === "b";
       filterSelect.querySelector('option[value="1"]').disabled =
@@ -518,7 +533,8 @@
     );
     memoryInput.onchange = () => setSociety({ memory: memoryInput.checked });
     function setMode(next) {
-      if (!["training", "comparison", "society"].includes(next)) return;
+      if (!["training", "comparison", "society", "encounter"].includes(next))
+        return;
       mode = next;
       playing = false;
       points.visible = mode === "training" && view === "points";
@@ -536,11 +552,14 @@
         "Concept Space / " +
         (mode === "comparison"
           ? "model comparison"
-          : mode === "society"
-            ? "people & collective knowledge"
-            : "training story");
+          : mode === "encounter"
+            ? "when two minds meet"
+            : mode === "society"
+              ? "people & collective knowledge"
+              : "training story");
       comparison.update({ active: mode === "comparison", view });
       society.update({ active: mode === "society", view });
+      encounter.update({ active: mode === "encounter", view });
       syncGeometry();
       updateUI();
     }
@@ -570,6 +589,7 @@
       mesh.visible = mode === "training" && view === "surface";
       comparison.update({ view });
       society.update({ view });
+      encounter.update({ view });
       pointButton.setAttribute("aria-pressed", String(view === "points"));
       surfaceButton.setAttribute("aria-pressed", String(view === "surface"));
       syncGeometry();
@@ -623,6 +643,22 @@
       if (!holder.clientWidth || !holder.clientHeight) return;
       renderer.setSize(holder.clientWidth, holder.clientHeight);
       camera.aspect = holder.clientWidth / holder.clientHeight;
+      // On phones, leave the lower part of the world available for the story overlay.
+      const lift =
+        holder.clientWidth <= 600 &&
+        !document
+          .querySelector(".cinematic-story")
+          .classList.contains("is-collapsed")
+          ? 0.14
+          : 0;
+      camera.setViewOffset(
+        holder.clientWidth,
+        holder.clientHeight,
+        0,
+        holder.clientHeight * lift,
+        holder.clientWidth,
+        holder.clientHeight,
+      );
       camera.updateProjectionMatrix();
     }
     new ResizeObserver(resize).observe(holder);
@@ -631,61 +667,50 @@
     setMode("comparison");
     updateUI();
     function drawLabels() {
-      const cmp = comparison.getState();
-      const cmpSpecs =
-        cmp.filter === "2"
-          ? [{ text: "Shared reach", p: [-0.08, 0.3, 0.2] }]
-          : cmp.filter === "0"
-            ? [{ text: "A only", p: [-0.4, 0.44, 0.15] }]
-            : cmp.filter === "1"
-              ? [{ text: "B only · specialty", p: [0.65, -0.6, 0.1] }]
-              : [
-                  ...(cmp.selection !== "b"
-                    ? [{ text: "A · broader territory", p: [-0.4, 0.44, 0.15] }]
-                    : []),
-                  ...(cmp.selection !== "a"
-                    ? [{ text: "B · unique specialty", p: [0.65, -0.6, 0.1] }]
-                    : []),
-                ];
-      const specs =
-        mode === "society"
-          ? society.getState().scope === "person"
-            ? [{ text: "One person", p: [-0.28, 0.3, 0.2] }]
-            : [
-                { text: "Living collective", p: [-0.14, 0.52, 0.15] },
-                ...(society.getState().memory
-                  ? [{ text: "External memory", p: [0.55, 0.51, 0.16] }]
-                  : []),
-              ]
-          : mode === "comparison"
-            ? cmpSpecs
-            : labelSpecs[chapterIndex()];
-      labels.forEach((label, i) => {
-        const spec = specs[i];
-        label.hidden = !spec;
-        if (!spec) return;
-        const p = new THREE.Vector3(...spec.p)
-          .applyMatrix4(world.matrixWorld)
-          .project(camera);
-        label.textContent = spec.text;
-        const x = (p.x * 0.5 + 0.5) * holder.clientWidth,
-          y = (-p.y * 0.5 + 0.5) * holder.clientHeight;
-        label.style.left =
-          Math.max(75, Math.min(holder.clientWidth - 75, x)) + "px";
-        label.style.top =
-          Math.max(125, Math.min(holder.clientHeight - 110, y)) + "px";
+      // A single contextual note follows its actual point in the rotating world.
+      labels.forEach((label) => {
+        label.hidden = true;
       });
-      if (!labels[0].hidden && !labels[1].hidden) {
-        const a = labels[0].getBoundingClientRect(),
-          b = labels[1].getBoundingClientRect();
-        if (
-          a.left < b.right + 5 &&
-          a.right + 5 > b.left &&
-          a.top < b.bottom + 5 &&
-          a.bottom + 5 > b.top
-        )
-          labels[1].style.top = parseFloat(labels[1].style.top) + 25 + "px";
+      if (!sceneNote || !notesToggle.checked) {
+        noteElement.hidden = noteLeader.hidden = true;
+        return;
       }
+      const target = new THREE.Vector3(...sceneNote.p).applyMatrix4(
+        world.matrixWorld,
+      );
+      const p = target.clone().project(camera);
+      const visible =
+        target.z > -0.2 &&
+        Math.abs(p.x) < 0.98 &&
+        Math.abs(p.y) < 0.95 &&
+        p.z < 1;
+      noteElement.hidden = noteLeader.hidden = !visible;
+      if (!visible) return;
+      const w = holder.clientWidth,
+        h = holder.clientHeight;
+      const x = (p.x * 0.5 + 0.5) * w,
+        y = (-p.y * 0.5 + 0.5) * h;
+      const nw = noteElement.offsetWidth,
+        nh = noteElement.offsetHeight;
+      const left = Math.max(
+        12,
+        Math.min(w - nw - 12, x + (x < w * 0.5 ? 40 : -nw - 40)),
+      );
+      const top = Math.max(
+        w <= 600 ? 185 : 96,
+        Math.min(h - nh - 20, y - nh - 30),
+      );
+      noteElement.style.left = left + "px";
+      noteElement.style.top = top + "px";
+      noteLeader.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      const line = noteLeader.querySelector("line"),
+        dot = noteLeader.querySelector("circle");
+      line.setAttribute("x1", x);
+      line.setAttribute("y1", y);
+      line.setAttribute("x2", Math.max(left, Math.min(left + nw, x)));
+      line.setAttribute("y2", top + nh);
+      dot.setAttribute("cx", x);
+      dot.setAttribute("cy", y);
     }
     function animate(now) {
       requestAnimationFrame(animate);
@@ -727,6 +752,9 @@
       setModel,
       setSociety,
       society,
+      setEncounter: (next) => encounter.update(next),
+      encounter,
+      setSceneNote,
       resize,
       pause() {
         playing = false;
@@ -747,6 +775,7 @@
           mode,
           comparison: comparison.getState(),
           society: society.getState(),
+          encounter: encounter.getState(),
           progress: t,
           chapter: chapterIndex(),
           view,

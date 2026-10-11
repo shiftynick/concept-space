@@ -89,24 +89,151 @@
       ],
     },
   };
+  scenarios.encounter = {
+    title: "When two minds meet",
+    category: "PEOPLE & CULTURE / HUMAN CONNECTION",
+    assumptions:
+      "Mara and Eli are fictional people in a shared conceptual geography. Teal and violet distinguish their unique reach; pale green marks shared reach. A new connection changes what Eli can reach. Brighter regions depict attention, not greater ability. Discovery is an authored possibility, not a claim that every conversation expands knowledge.",
+    steps: [
+      [
+        "Understanding starts with shared ground.",
+        "Mara and Eli can both reach some of the same concepts. That overlap gives them a place to begin—even though much of their experience is different.",
+        "The pale green region where both spaces overlap.",
+      ],
+      [
+        "An explanation opens a new path.",
+        "Mara connects an unfamiliar idea to something Eli already understands. Eli gains access to part of Mara’s territory, turning it into shared ground.",
+        "A path reaches into Mara’s space; teal points become shared pale green.",
+      ],
+      [
+        "The same words can land elsewhere.",
+        "Eli connects the explanation to a different part of his experience. Two regions light up: both people are engaged, but they are following different meanings.",
+        "The two separate destinations. The dimmer territory is still reachable.",
+      ],
+      [
+        "Together, they find another possibility.",
+        "A connection between their perspectives opens a new idea. In this imagined encounter, neither person’s original space included this region.",
+        "Two paths converge on a new constellation above both original spaces.",
+      ],
+    ],
+  };
+  const annotations = {
+    training: [
+      null,
+      {
+        title: "A connection forms",
+        text: "Two previously separate regions become reachable together.",
+        p: [-0.02, -0.015, 0.12],
+      },
+      {
+        title: "Richer, not larger",
+        text: "Density changes here. The boundary stays in place.",
+        p: [-0.38, 0.3, 0.23],
+      },
+      {
+        title: "This gap remains",
+        text: "Learning closes one opening, but leaves this one intact.",
+        p: [0.3, -0.17, 0.12],
+      },
+      {
+        title: "A new emphasis",
+        text: "This region expands as a different region recedes.",
+        p: [0.52, 0.33, 0.13],
+      },
+    ],
+    comparison: [
+      null,
+      {
+        title: "B’s distinct strength",
+        text: "This specialty lies outside Model A’s reach.",
+        p: [0.58, -0.5, 0.1],
+      },
+      {
+        title: "Reachable by both",
+        text: "Shared territory can still have different internal density.",
+        p: [-0.08, 0.15, 0.15],
+      },
+      null,
+    ],
+    society: [
+      null,
+      null,
+      {
+        title: "Beyond living memory",
+        text: "Preserved in records, not currently carried by living people.",
+        p: [0.49, 0.37, 0.05],
+      },
+    ],
+    encounter: [
+      {
+        title: "Common ground",
+        text: "Both minds can reach this part of the space.",
+        p: [0, -0.08, 0.16],
+      },
+      {
+        title: "Now shared",
+        text: "Eli gains access to a region Mara already carried.",
+        p: [-0.22, 0.24, 0.08],
+      },
+      null,
+      {
+        title: "A new possibility",
+        text: "Outside both original spaces; now reachable together.",
+        p: [0, 0.65, 0.04],
+      },
+    ],
+  };
+  const shortNames = {
+    training: ["Emerge", "Connect", "Enrich", "Fill gaps", "Fine-tune"],
+    comparison: [
+      "Broader reach",
+      "Distinct strength",
+      "Shared ground",
+      "Together",
+    ],
+    society: ["One person", "Living collective", "External memory"],
+    encounter: ["Shared ground", "Teaching", "Misunderstanding", "Discovery"],
+  };
   let scenario = "training",
     step = 0,
     guided = false,
-    deadline = 0;
+    free = false,
+    applying = false,
+    completed = true;
   const play = document.getElementById("story-play"),
     title = document.getElementById("story-title"),
     copy = document.getElementById("story-copy"),
     notice = document.getElementById("story-notice"),
-    stepsEl = document.getElementById("story-steps");
+    stepsEl = document.getElementById("story-steps"),
+    status = document.getElementById("story-status"),
+    auto = document.getElementById("story-auto"),
+    progressFill = document.getElementById("story-progress-fill");
+  function idleLabel() {
+    return scenario === "comparison" || scenario === "society"
+      ? "Read moment"
+      : "Play moment";
+  }
+  function buttonLabel(text, symbol = "▶") {
+    play.textContent = text + " " + symbol;
+  }
   function stop() {
     guided = false;
+    clock.pause();
+    readingClock.reset();
     api?.pause();
-    play.innerHTML = 'Play story <span aria-hidden="true">▶</span>';
+    buttonLabel(completed ? "Replay moment" : idleLabel());
+    status.textContent = "Paused · take your time";
+  }
+  function setNote(progress = 1) {
+    const note = annotations[scenario][step];
+    api?.setSceneNote(free || progress < 0.5 ? null : note);
   }
   function paintGuide() {
     const data = scenarios[scenario],
       s = data.steps[step];
+    document.getElementById("story-context").textContent = "THE STORY SO FAR";
     title.textContent = s[0];
+    document.getElementById("collapsed-story-title").textContent = s[0];
     copy.textContent = s[1];
     notice.textContent = s[2];
     document.getElementById("story-count").textContent =
@@ -117,19 +244,54 @@
       b.setAttribute("aria-pressed", String(Number(b.dataset.step) === step));
     document.getElementById("story-next").disabled =
       step === data.steps.length - 1;
+    document.getElementById("story-prev").disabled = step === 0;
+    setNote();
   }
   function regionFilter(value) {
     const f = document.getElementById("region-filter");
     f.value = value;
     f.dispatchEvent(new Event("change"));
   }
-  function applyStep(index, keepPlaying = false) {
+  function renderMoment(progress) {
+    applying = true;
+    if (scenario === "training")
+      api.setProgress(step * 0.2 + 0.002 + progress * 0.196);
+    if (scenario === "encounter") api.setEncounter({ step, progress });
+    progressFill.style.width = progress * 100 + "%";
+    setNote(progress);
+    applying = false;
+  }
+  const readingClock = window.createStoryClock({
+    duration: 3500,
+    onProgress() {},
+    onComplete() {
+      if (auto.checked && step < scenarios[scenario].steps.length - 1) {
+        applyStep(step + 1);
+        start();
+      } else stop();
+    },
+  });
+  const clock = window.createStoryClock({
+    duration: 7000,
+    onProgress: renderMoment,
+    onComplete() {
+      completed = true;
+      api?.pause();
+      buttonLabel("Replay moment");
+      status.textContent = "Moment complete · take a closer look";
+      if (auto.checked && step < scenarios[scenario].steps.length - 1) {
+        status.textContent = "Reading pause · next moment follows";
+        readingClock.play(true);
+      } else guided = false;
+    },
+  });
+  function applyStep(index) {
+    stop();
+    clock.reset();
+    free = false;
+    completed = true;
     step = Math.max(0, Math.min(scenarios[scenario].steps.length - 1, index));
-    if (!keepPlaying) stop();
-    if (scenario === "training") {
-      api.setProgress(step * 0.2 + (keepPlaying ? 0.002 : 0.1));
-      if (keepPlaying) document.getElementById("play").click();
-    }
+    applying = true;
     if (scenario === "comparison") {
       api.setModel(step === 0 ? "a" : step === 1 ? "b" : "both");
       regionFilter(step === 2 ? "2" : "all");
@@ -139,7 +301,24 @@
         scope: step === 0 ? "person" : "both",
         memory: step === 2,
       });
+    applying = false;
     paintGuide();
+    renderMoment(1);
+    buttonLabel(idleLabel());
+  }
+  function start() {
+    if (free) applyStep(step);
+    const restart = completed;
+    completed = false;
+    guided = true;
+    readingClock.reset();
+    clock.play(restart);
+    if (restart) renderMoment(0);
+    buttonLabel("Pause moment", "Ⅱ");
+    status.textContent =
+      scenario === "comparison" || scenario === "society"
+        ? "Reading time · inspect the scene"
+        : "Watch the scene · pause whenever you like";
   }
   function openScenario(name) {
     if (!scenarios[name]) return;
@@ -148,6 +327,7 @@
     step = 0;
     explore.hidden = true;
     viewer.hidden = false;
+    document.body.classList.add("viewer-open");
     document.getElementById("scenario-title").textContent =
       scenarios[name].title;
     document.getElementById("scenario-category").textContent =
@@ -162,9 +342,10 @@
       b.type = "button";
       b.className = "story-step";
       b.dataset.step = i;
+      b.setAttribute("aria-label", `Moment ${i + 1}: ${s[0]}`);
       const num = document.createElement("span");
       num.textContent = String(i + 1).padStart(2, "0");
-      b.append(num, document.createTextNode(s[0]));
+      b.append(num, document.createTextNode(shortNames[name][i]));
       b.onclick = () => applyStep(i);
       stepsEl.append(b);
     });
@@ -173,10 +354,11 @@
       applyStep(0);
       api.resize();
     } else {
-      copy.textContent =
-        "The 3D viewer could not start. Please use a browser with WebGL support.";
+      title.textContent = "The 3D viewer could not start";
+      copy.textContent = "Please use a browser with WebGL support.";
       play.disabled = true;
     }
+    document.getElementById("explore-nav").removeAttribute("aria-current");
     window.scrollTo({ top: 0, behavior: "instant" });
   }
   function route() {
@@ -186,7 +368,11 @@
       stop();
       explore.hidden = false;
       viewer.hidden = true;
+      document.body.classList.remove("viewer-open");
       document.title = "Concept Space — explore the shape of understanding";
+      document
+        .getElementById("explore-nav")
+        .setAttribute("aria-current", "page");
       if (hash === "about" || hash === "scenarios")
         requestAnimationFrame(() =>
           document.getElementById(hash).scrollIntoView({ behavior: "smooth" }),
@@ -194,70 +380,130 @@
       else window.scrollTo({ top: 0, behavior: "instant" });
     }
   }
+  const toolsPanel = document.getElementById("scene-tools");
+  toolsPanel.open = matchMedia("(min-width: 1000px)").matches;
+  document.getElementById("story-collapse").onclick = () => {
+    const button = document.getElementById("story-collapse"),
+      expanded = button.getAttribute("aria-expanded") === "true";
+    button.setAttribute("aria-expanded", String(!expanded));
+    button.textContent = expanded ? "Show story +" : "Hide story −";
+    document.getElementById("story-detail").hidden = expanded;
+    document.getElementById("collapsed-story-title").hidden = !expanded;
+    document
+      .querySelector(".cinematic-story")
+      .classList.toggle("is-collapsed", expanded);
+    api?.resize();
+  };
   document.getElementById("scenario-picker").onchange = (e) =>
     (location.hash = e.target.value);
   window.addEventListener("hashchange", route);
-  play.onclick = () => {
-    if (guided) {
-      stop();
-      return;
-    }
-    guided = true;
-    applyStep(step === scenarios[scenario].steps.length - 1 ? 0 : step, true);
-    play.innerHTML = 'Pause story <span aria-hidden="true">Ⅱ</span>';
-    deadline = performance.now() + 6500;
-  };
+  play.onclick = () => (guided ? stop() : start());
   document.getElementById("story-next").onclick = () => applyStep(step + 1);
-  document.getElementById("free-explore").onclick = () => {
+  document.getElementById("story-prev").onclick = () => applyStep(step - 1);
+  auto.onchange = () => {
+    if (!auto.checked && readingClock.getState().running) stop();
+  };
+  function exploreFreely() {
     stop();
-    title.textContent = "Make your own connections";
+    free = true;
+    setNote();
+    document.getElementById("story-context").textContent = "YOUR EXPLORATION";
+    title.textContent =
+      scenario === "encounter"
+        ? scenarios.encounter.steps[step][0]
+        : document.getElementById("chapter").textContent;
+    document.getElementById("collapsed-story-title").textContent =
+      title.textContent;
     copy.textContent =
-      "The scene is yours to explore. Rotate, change the representation, and try the controls below the visualization.";
+      scenario === "encounter"
+        ? "Orbit the encounter and switch between Points and Surface. Choose any story moment to return to its explanation."
+        : document.getElementById("event").textContent;
+    if (scenario === "comparison") {
+      const state = api.comparison.getState(),
+        who =
+          state.selection === "both"
+            ? "Both models"
+            : state.selection === "a"
+              ? "Model A"
+              : "Model B";
+      if (state.filter === "2") {
+        title.textContent = who + " · shared reach";
+        copy.textContent =
+          "Only territory both models can reach is visible. " +
+          (state.selection === "both"
+            ? "At each point, density reflects the richer of the two illustrative representations."
+            : "The density shown belongs to " + who + ".");
+      } else if (state.filter === "0" || state.filter === "1") {
+        const owner = state.filter === "0" ? "A" : "B";
+        title.textContent = "Model " + owner + " · unique territory";
+        copy.textContent =
+          "Only concepts reachable by Model " +
+          owner +
+          " and outside the other model’s reach are visible.";
+      }
+      document.getElementById("collapsed-story-title").textContent =
+        title.textContent;
+    }
     notice.textContent =
-      scenario === "society"
-        ? "Toggle external memory to distinguish knowledge carried by people from knowledge retained outside them."
-        : scenario === "comparison"
-          ? "Keep Shared reach selected while switching A and B to compare their density in the same territory."
-          : "Move the timeline slowly through a chapter, then switch views without losing your place.";
+      "Choose a story moment below to return to the guided perspective.";
     for (const b of stepsEl.children) b.setAttribute("aria-pressed", "false");
+  }
+  document.getElementById("free-explore").onclick = () => {
+    exploreFreely();
+    toolsPanel.open = true;
     document.getElementById("points-view").focus({ preventScroll: true });
   };
+  // Click/change events cover keyboard and pointer input. Programmatic guide changes are excluded.
   for (const selector of [
-    "#training",
-    "#play",
     "[data-model]",
     "#region-filter",
     "[data-scope]",
     "#external-memory",
   ])
     document.querySelectorAll(selector).forEach((el) =>
-      el.addEventListener("pointerdown", () => {
-        if (guided) {
-          if (el.id === "play") {
-            guided = false;
-            play.innerHTML = 'Play story <span aria-hidden="true">▶</span>';
-          } else stop();
-        }
+      el.addEventListener(el.tagName === "BUTTON" ? "click" : "change", () => {
+        if (!applying) exploreFreely();
       }),
     );
+  document.getElementById("training").addEventListener("input", () => {
+    stop();
+    free = false;
+    completed = true;
+    step = api.getState().chapter;
+    paintGuide();
+    progressFill.style.width = "0%";
+  });
+  document.getElementById("play").addEventListener("click", () => {
+    // Native training playback owns its clock; do not pause it from the story controller.
+    guided = false;
+    clock.pause();
+    readingClock.reset();
+    free = false;
+    buttonLabel("Play moment");
+    status.textContent = "Exploring the training timeline";
+  });
+  document.getElementById("scene").addEventListener("pointerdown", () => {
+    if (guided) stop();
+  });
   setInterval(() => {
-    if (!guided || document.hidden || viewer.hidden) return;
-    if (scenario === "training") {
-      const s = api.getState();
-      if (s.chapter !== step) {
-        step = s.chapter;
+    const visible = !document.hidden && !viewer.hidden;
+    const now = performance.now();
+    if (readingClock.getState().running) readingClock.tick(now, visible);
+    else clock.tick(now, visible);
+    if (
+      visible &&
+      api &&
+      scenario === "training" &&
+      !guided &&
+      api.getState().playing
+    ) {
+      const c = api.getState().chapter;
+      if (c !== step) {
+        step = c;
         paintGuide();
       }
-      if (s.progress === 1) stop();
-    } else if (performance.now() >= deadline) {
-      if (step === scenarios[scenario].steps.length - 1) {
-        stop();
-        return;
-      }
-      applyStep(step + 1, true);
-      deadline = performance.now() + 6500;
     }
-  }, 150);
+  }, 60);
   route();
   /* Procedural preview art, deliberately illustrative rather than captured data. */
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -340,11 +586,22 @@
         keep = left || mid || right;
         color = left ? [110, 224, 187] : [134, 165, 209];
       }
-      if (type === "comparison") {
+      if (type === "comparison" || type === "encounter") {
         const a = Math.hypot(x + 0.23, y - 0.08, z) < 0.64,
           b = Math.hypot(x - 0.28, y + 0.1, z) < 0.46;
         keep = a || b;
-        color = a && b ? [199, 194, 241] : a ? [87, 202, 204] : [248, 174, 110];
+        color =
+          type === "encounter"
+            ? a && b
+              ? [220, 235, 177]
+              : a
+                ? [98, 217, 203]
+                : [181, 160, 243]
+            : a && b
+              ? [199, 194, 241]
+              : a
+                ? [87, 202, 204]
+                : [248, 174, 110];
       }
       if (type === "society") {
         const individual = Math.hypot(x + 0.22, y - 0.08, z) < 0.29;
@@ -421,6 +678,8 @@
       scenario,
       step,
       guided,
+      free,
+      playback: clock.getState(),
       screen: viewer.hidden ? "explore" : "viewer",
     }),
   };

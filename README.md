@@ -2,7 +2,7 @@
 
 An interactive visual language for exploring concepts, model reach, and learning.
 
-An exhibit-style Explore page leads into three guided perspectives: **How a Model Learns**, **Different Minds, Shared Ground**, and **One Person / Society**. Each scene can be viewed as a surface or as a point cloud. Guided stories and direct controls share the same scene and camera.
+An exhibit-style Explore page leads into four guided perspectives: **When Two Minds Meet**, **How a Model Learns**, **Different Minds, Shared Ground**, and **One Person / Society**. Each scene can be viewed as a surface or as a point cloud. Guided stories and direct controls share the same scene and camera.
 
 **This is a teaching metaphor, not a measurement of any real model, person, or society.** Geometry, density, positions, and training behavior are illustrative. Density is an exploratory representation of internal richness; it does not measure confidence or prompt history.
 
@@ -15,6 +15,17 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
 Open <http://localhost:8000>. A browser with WebGL support is required. Three.js is vendored, so the prototype makes no external runtime requests.
+
+## When two minds meet
+
+Open `/#encounter` for a fictional encounter between Mara and Eli. Teal is Mara-only reach, violet is Eli-only reach, and pale green is shared reach.
+
+- **Shared ground:** an overlap gives them a place to begin.
+- **Teaching:** Eli gains access to a part of Mara’s existing territory. The region becomes shared; Mara does not lose it.
+- **Misunderstanding:** attention moves to two different regions. Dimming is a focus cue, not a loss of conceptual reach.
+- **Discovery:** paths converge on a region outside both original spaces. This is an illustrative outcome, not a prediction about conversations.
+
+Points and Surface use the same fields and preserve the current moment. Collapse the story or scene controls to clear the view. On narrow screens, the camera composition leaves room for the narrative; the panels remain independently scrollable. Scene notes track world coordinates during orbit, hide when the target rotates behind the scene, and can be toggled off.
 
 ## Compare models
 
@@ -39,12 +50,12 @@ Open `/#society` for three moments: one person’s reach, knowledge distributed 
 
 ## Guided and free exploration
 
-The site opens on Explore. All three scenarios have a guided story with play/pause, next, and selectable moments. **Explore freely** pauses the story and focuses the scene controls. Direct links use `/#training`, `/#comparison`, and `/#society`. The About section explains the visual metaphor.
+The site opens on Explore. All four scenarios have a full-screen visualizer with frosted, collapsible narrative and control panels, a specific “watch for” cue, and occasional notes anchored to locations in the 3D world. Previous/next and selectable moments keep the text and scene together. Play a moment to watch its change, then inspect it at a reading pause. **Auto-advance** is optional and adds reading time between moments. Playback freezes while the tab is hidden. **Explore freely** pauses the story and focuses the scene controls. Direct links use `/#encounter`, `/#training`, `/#comparison`, and `/#society`. The About section explains the visual metaphor.
 
 
 - Switch between **Points** and **Surface** without changing the camera or training position.
 - Drag to orbit; scroll to zoom. Toggle auto-orbit to hold the view still.
-- Play, pause, scrub the training timeline, or jump to a chapter. The training story starts partway through emergence; scrub to the beginning to watch from initialization.
+- Play, pause, scrub the training timeline, or jump to a chapter. Each guided moment opens at its endpoint; play it to see the change unfold. Scrub the timeline to inspect intermediate states.
 - Use the keyboard to operate buttons and the timeline. Reduced-motion preferences disable auto-orbit on load. Training playback starts on request.
 
 The five training chapters are deliberately distinct:
@@ -63,11 +74,13 @@ Point concentration conveys illustrative density directly; surface brightness pr
 index.html                  Explore gallery and scenario viewer
 src/app.js                  Shared field, rendering, interaction, and training story
 src/styles.css              Core scene controls
-src/site.css                Exhibit layout, responsive gallery, and narrative rail
+src/site.css                Exhibit layout, responsive gallery, and immersive glass panels
 src/site.js                 Hash routes, guided stories, and procedural preview art
 src/society.js              Individual, living collective, and external memory
+src/encounter.js            Shared reach, teaching, misunderstanding, and discovery
+src/story-clock.js          Pausable moment timing and visibility-aware reading pauses
 src/comparison.js           Fictional model fields, overlap, and density comparison
-tests/                      Comparison and society behavior checks
+tests/                      Geometry and story playback checks
 scripts/build-site.cjs      Static deployment packaging
 .openai/hosting.json        Sites project identity and output configuration
 experiments/                Earlier surface, luminous-density, and point-cloud studies
@@ -94,7 +107,7 @@ node --test tests/*.test.cjs
 
 The main scene samples one signed field for both point occupancy and surface extraction. A seeded point distribution keeps samples stable across training states. Surface geometry is rebuilt only when needed; the enrichment chapter changes density without rebuilding the boundary.
 
-The browser exposes `window.ideaStudy` for inspection, with `setProgress(0…1)`, `setView('points' | 'surface')`, `setMode('training' | 'comparison' | 'society')`, `setModel('a' | 'b' | 'both')`, `getState()`, and `sampleField(x, y, z)`. Comparison fields and density functions are available through `ideaStudy.comparison`. The society scenario exposes `setSociety({scope, memory})` and `ideaStudy.society`. The site guide exposes `window.conceptSite` for local inspection.
+The browser exposes `window.ideaStudy` for inspection, with `setProgress(0…1)`, `setView('points' | 'surface')`, `setMode('training' | 'comparison' | 'society' | 'encounter')`, `setModel('a' | 'b' | 'both')`, `getState()`, and `sampleField(x, y, z)`. Comparison fields and density functions are available through `ideaStudy.comparison`. The society scenario exposes `setSociety({scope, memory})` and `ideaStudy.society`. The site guide exposes `window.conceptSite` for local inspection.
 
 ## Static deployment
 
