@@ -16,7 +16,8 @@
   try {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let t = 0.16,
-      playing = !reduced,
+      playing = false,
+      mode = "comparison",
       view = "points",
       yaw = 0.08,
       pitch = 0.06,
@@ -250,9 +251,9 @@
     const teal = new THREE.Color(0x42cfc2),
       blue = new THREE.Color(0x637cce),
       gold = new THREE.Color(0xffce91);
-    function buildSurface() {
+    function buildSurface(sample = field) {
       for (let i = 0; i < count; i++)
-        values[i] = field(coords[i * 3], coords[i * 3 + 1], coords[i * 3 + 2]);
+        values[i] = sample(coords[i * 3], coords[i * 3 + 1], coords[i * 3 + 2]);
       for (let z = 0; z <= N; z++)
         for (let y = 0; y <= N; y++)
           for (let x = 0; x <= N; x++) {
@@ -348,9 +349,15 @@
       const g = new THREE.BufferGeometry();
       g.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
       g.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-      mesh.geometry.dispose();
-      mesh.geometry = g;
+      return g;
     }
+    const comparison = window.createComparison({
+      THREE,
+      world,
+      candidates,
+      extractSurface: buildSurface,
+      dpr: renderer.getPixelRatio(),
+    });
     function syncGeometry(force = false) {
       const key = configure(t);
       uniforms.uEnrich.value = enrich;
@@ -359,8 +366,13 @@
         buildParticles();
         fieldKey = key;
       }
-      if (view === "surface" && (key !== surfaceKey || force)) {
-        buildSurface();
+      if (
+        mode === "training" &&
+        view === "surface" &&
+        (key !== surfaceKey || force)
+      ) {
+        mesh.geometry.dispose();
+        mesh.geometry = buildSurface();
         surfaceKey = key;
       }
     }
@@ -395,6 +407,12 @@
       return Math.min(4, Math.floor(t * 5));
     }
     function updateUI() {
+      root.querySelector("#model-legend").hidden = mode !== "comparison";
+      legend.parentElement.hidden = mode === "comparison";
+      if (mode === "comparison") {
+        comparisonUI();
+        return;
+      }
       const idx = chapterIndex();
       chapter.textContent = titles[idx];
       event.textContent = notes[idx];
@@ -411,10 +429,87 @@
           ? "Point concentration = illustrative density"
           : "Surface brightness = illustrative density";
     }
+    const modelButtons = [...root.querySelectorAll("[data-model]")];
+    const filterSelect = root.querySelector("#region-filter");
+    function comparisonUI() {
+      const state = comparison.getState();
+      const names = {
+        a: "Model A · broader reach",
+        b: "Model B · focused reach",
+        both: "Shared territory, different reach",
+      };
+      chapter.textContent = names[state.selection];
+      event.textContent =
+        state.selection === "both"
+          ? "Model B is smaller overall, with a unique lower-right specialty."
+          : "Switch models to compare density at the same coordinates.";
+      const modelLegend = root.querySelector("#model-legend");
+      modelLegend.hidden = false;
+      modelLegend.innerHTML =
+        state.selection === "both"
+          ? '<span><i class="swatch-a"></i>A only</span><span><i class="swatch-b"></i>B only</span><span><i class="swatch-shared"></i>Shared</span>'
+          : state.selection === "a"
+            ? '<span><i class="swatch-a"></i>Model A · reachable territory</span>'
+            : '<span><i class="swatch-b"></i>Model B · reachable territory</span>';
+      filterSelect.querySelector('option[value="0"]').disabled =
+        state.selection === "b";
+      filterSelect.querySelector('option[value="1"]').disabled =
+        state.selection === "a";
+      legend.parentElement.hidden = true;
+      modelButtons.forEach((b) =>
+        b.setAttribute(
+          "aria-pressed",
+          String(b.dataset.model === state.selection),
+        ),
+      );
+      filterSelect.value = state.filter;
+    }
+    function setMode(next) {
+      if (!["training", "comparison"].includes(next)) return;
+      mode = next;
+      playing = false;
+      points.visible = mode === "training" && view === "points";
+      mesh.visible = mode === "training" && view === "surface";
+      root.querySelector("#training-controls").hidden = mode !== "training";
+      root.querySelector("#comparison-controls").hidden = mode !== "comparison";
+      root
+        .querySelector("#training-mode")
+        .setAttribute("aria-pressed", String(mode === "training"));
+      root
+        .querySelector("#comparison-mode")
+        .setAttribute("aria-pressed", String(mode === "comparison"));
+      root.querySelector(".eyebrow").textContent =
+        "Idea spaces / " +
+        (mode === "comparison" ? "model comparison" : "training story");
+      comparison.update({ active: mode === "comparison", view });
+      syncGeometry();
+      updateUI();
+    }
+    function setModel(selection) {
+      if (!["a", "b", "both"].includes(selection)) return;
+      const previousFilter = comparison.getState().filter;
+      const invalid =
+        (selection === "a" && previousFilter === "1") ||
+        (selection === "b" && previousFilter === "0");
+      comparison.update({
+        selection,
+        filter: invalid ? "all" : previousFilter,
+      });
+      updateUI();
+    }
+    root.querySelector("#training-mode").onclick = () => setMode("training");
+    root.querySelector("#comparison-mode").onclick = () =>
+      setMode("comparison");
+    modelButtons.forEach((b) => (b.onclick = () => setModel(b.dataset.model)));
+    filterSelect.onchange = () => {
+      comparison.update({ filter: filterSelect.value });
+      updateUI();
+    };
     function setView(next) {
       view = next;
-      points.visible = view === "points";
-      mesh.visible = view === "surface";
+      points.visible = mode === "training" && view === "points";
+      mesh.visible = mode === "training" && view === "surface";
+      comparison.update({ view });
       pointButton.setAttribute("aria-pressed", String(view === "points"));
       surfaceButton.setAttribute("aria-pressed", String(view === "surface"));
       syncGeometry();
@@ -471,9 +566,27 @@
     new ResizeObserver(resize).observe(holder);
     resize();
     syncGeometry();
+    setMode("comparison");
     updateUI();
     function drawLabels() {
-      const specs = labelSpecs[chapterIndex()];
+      const cmp = comparison.getState();
+      const cmpSpecs =
+        cmp.filter === "2"
+          ? [{ text: "Shared reach", p: [-0.08, 0.3, 0.2] }]
+          : cmp.filter === "0"
+            ? [{ text: "A only", p: [-0.4, 0.44, 0.15] }]
+            : cmp.filter === "1"
+              ? [{ text: "B only · specialty", p: [0.65, -0.6, 0.1] }]
+              : [
+                  ...(cmp.selection !== "b"
+                    ? [{ text: "A · broader territory", p: [-0.4, 0.44, 0.15] }]
+                    : []),
+                  ...(cmp.selection !== "a"
+                    ? [{ text: "B · unique specialty", p: [0.65, -0.6, 0.1] }]
+                    : []),
+                ];
+      const specs =
+        mode === "comparison" ? cmpSpecs : labelSpecs[chapterIndex()];
       labels.forEach((label, i) => {
         const spec = specs[i];
         label.hidden = !spec;
@@ -495,7 +608,7 @@
       const dt = Math.min((now - lastFrame) / 1000, 0.08);
       lastFrame = now;
       if (document.hidden) return;
-      if (playing) {
+      if (playing && mode === "training") {
         t = Math.min(1, t + dt / 50);
         if (t === 1) playing = false;
         configure(t);
@@ -524,6 +637,9 @@
     window.ideaStudy = {
       setProgress: seek,
       setView,
+      setMode,
+      setModel,
+      comparison,
       getState() {
         let active = 0;
         const g = points.geometry;
@@ -535,6 +651,8 @@
           if (g.attributes.aSeed.array[i] < d) active++;
         }
         return {
+          mode,
+          comparison: comparison.getState(),
           progress: t,
           chapter: chapterIndex(),
           view,

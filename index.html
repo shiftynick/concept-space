@@ -20,6 +20,11 @@
             ><i></i><span id="view-legend">Model space · points</span></span
           >
         </div>
+        <div class="model-legend" id="model-legend">
+          <span><i class="swatch-a"></i>A only</span
+          ><span><i class="swatch-b"></i>B only</span
+          ><span><i class="swatch-shared"></i>Shared</span>
+        </div>
         <div class="annotation" id="label-a" hidden></div>
         <div class="annotation" id="label-b" hidden></div>
         <div class="chapter" id="chapter">Islands of possibility</div>
@@ -27,7 +32,9 @@
           Separate regions emerge within the larger space.
         </div>
         <span class="sr" id="description"
-          >One conceptual model space in two interchangeable views. Five
+          >Compare two fictional models in Points or Surface views. Model A has
+          broader reach; Model B has a unique specialty. Filter shared reach or
+          either model’s unique territory. The training story offers five
           chapters show islands emerging, regions connecting, density increasing
           at fixed reach, one hole filling while another remains, and selective
           expansion and contraction during fine-tuning. Switch views without
@@ -37,34 +44,66 @@
         >
       </div>
       <div class="controls">
+        <div class="view-switch" role="group" aria-label="Experience">
+          <button type="button" id="comparison-mode" aria-pressed="true">
+            Compare models</button
+          ><button type="button" id="training-mode" aria-pressed="false">
+            Training story
+          </button>
+        </div>
         <div class="view-switch" role="group" aria-label="Representation">
           <button type="button" id="points-view" aria-pressed="true">
             Points</button
           ><button type="button" id="surface-view" aria-pressed="false">
             Surface</button
-          ><span>Same space · same moment</span>
+          ><span>Same space · same camera</span>
         </div>
-        <div class="timeline-head">
-          <label for="training">Training progression</label
-          ><span id="phase" aria-live="polite">Early training</span>
+        <div id="comparison-controls">
+          <div class="model-switch" role="group" aria-label="Model selection">
+            <button type="button" data-model="a" aria-pressed="false">
+              Model A</button
+            ><button type="button" data-model="b" aria-pressed="false">
+              Model B</button
+            ><button type="button" data-model="both" aria-pressed="true">
+              Both</button
+            ><label for="region-filter"
+              >Show
+              <select id="region-filter">
+                <option value="all">All regions</option>
+                <option value="2">Shared reach</option>
+                <option value="0">A only</option>
+                <option value="1">B only</option>
+              </select></label
+            >
+          </div>
+          <p class="comparison-note">
+            Illustrative models · shared coordinates · brightness and point
+            concentration suggest density
+          </p>
         </div>
-        <div class="transport">
-          <button type="button" id="play">Pause</button
-          ><input
-            id="training"
-            aria-label="Illustrative training progression"
-            type="range"
-            min="0"
-            max="1000"
-            value="240"
-          />
-        </div>
-        <div class="chapters" role="group" aria-label="Training chapters">
-          <button type="button" data-chapter="0">1 · Emerge</button
-          ><button type="button" data-chapter="1">2 · Connect</button
-          ><button type="button" data-chapter="2">3 · Enrich</button
-          ><button type="button" data-chapter="3">4 · Fill gaps</button
-          ><button type="button" data-chapter="4">5 · Fine-tune</button>
+        <div id="training-controls" hidden>
+          <div class="timeline-head">
+            <label for="training">Training progression</label
+            ><span id="phase" aria-live="polite">Early training</span>
+          </div>
+          <div class="transport">
+            <button type="button" id="play">Pause</button
+            ><input
+              id="training"
+              aria-label="Illustrative training progression"
+              type="range"
+              min="0"
+              max="1000"
+              value="160"
+            />
+          </div>
+          <div class="chapters" role="group" aria-label="Training chapters">
+            <button type="button" data-chapter="0">1 · Emerge</button
+            ><button type="button" data-chapter="1">2 · Connect</button
+            ><button type="button" data-chapter="2">3 · Enrich</button
+            ><button type="button" data-chapter="3">4 · Fill gaps</button
+            ><button type="button" data-chapter="4">5 · Fine-tune</button>
+          </div>
         </div>
         <div class="footer">
           <span>Conceptual geometry · no measured model data</span
@@ -74,6 +113,7 @@
       </div>
     </div>
     <script src="vendor/three/three.min.js"></script>
+    <script src="src/comparison.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>
