@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Idea Space — point cloud space</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: var(--foreground, #e4eaf5);
+        background: transparent;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      #idea-study {
+        --ink: #e8eff9;
+        --quiet: #9aaec4;
+        --line: #283747;
+        color: var(--ink);
+      }
+      .stage {
+        position: relative;
+        height: 540px;
+        overflow: hidden;
+        border-radius: 16px;
+        background: radial-gradient(
+          ellipse at 48% 50%,
+          #132334 0%,
+          #0a111e 52%,
+          #070c15 100%
+        );
+        padding: 20px;
+      }
+      .stage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        cursor: grab;
+      }
+      .stage canvas:active {
+        cursor: grabbing;
+      }
+      .eyebrow {
+        position: absolute;
+        top: 22px;
+        left: 22px;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--quiet);
+        pointer-events: none;
+      }
+      .chapter {
+        position: absolute;
+        left: 22px;
+        bottom: 51px;
+        font-size: 23px;
+        font-weight: 500;
+        letter-spacing: -0.035em;
+        pointer-events: none;
+      }
+      .event {
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        bottom: 24px;
+        color: var(--quiet);
+        font-size: 12px;
+        pointer-events: none;
+      }
+      .universe-label {
+        position: absolute;
+        top: 55px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: #b7c5d5;
+        pointer-events: none;
+      }
+      .legend {
+        display: flex;
+        gap: 17px;
+        flex-wrap: wrap;
+        position: absolute;
+        left: 22px;
+        top: 82px;
+        font-size: 11px;
+        color: var(--quiet);
+        pointer-events: none;
+      }
+      .key {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .key i {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background: #61ded8;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #61ded877;
+      }
+      .point-control {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--foreground, #e4eaf5);
+        margin-top: 18px;
+      }
+      .point-control input {
+        flex: 1;
+        min-width: 0;
+        accent-color: var(--foreground, #dbe4ef);
+      }
+      .point-control span {
+        font-variant-numeric: tabular-nums;
+        min-width: 24px;
+      }
+      .density-control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        margin-top: 17px;
+        color: var(--foreground, #e4eaf5);
+      }
+      .density-control label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .density-control span {
+        color: var(--muted-foreground, #95a3b6);
+        font-size: 11px;
+      }
+      .controls {
+        padding: 16px 0 0;
+        color: var(--foreground, #e4eaf5);
+      }
+      .timeline-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+      .timeline-head span:last-child {
+        font-variant-numeric: tabular-nums;
+        color: var(--muted-foreground, #95a3b6);
+      }
+      .transport {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .transport button {
+        color: var(--primary-foreground, #0b111c);
+        background: var(--primary, #dbe4ef);
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-width: 81px;
+        cursor: pointer;
+      }
+      .transport input {
+        width: 100%;
+        min-width: 0;
+        accent-color: var(--foreground, #dbe4ef);
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        margin: 9px 0 0 95px;
+        color: var(--muted-foreground, #95a3b6);
+        font-size: 11px;
+      }
+      .footer {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        color: var(--muted-foreground, #95a3b6);
+        font-size: 11px;
+        margin-top: 17px;
+      }
+      .footer label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .footer input {
+        accent-color: var(--foreground, #dbe4ef);
+      }
+      .error {
+        position: absolute;
+        inset: 140px 24px auto;
+        line-height: 1.5;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+      }
+      @media (max-width: 440px) {
+        .stage {
+          height: 480px;
+        }
+        .chapter {
+          font-size: 21px;
+        }
+        .event {
+          bottom: 19px;
+          max-width: 280px;
+          line-height: 1.5;
+        }
+        .chapter {
+          bottom: 65px;
+        }
+        .legend {
+          top: 78px;
+        }
+        .universe-label {
+          top: 51px;
+        }
+        .footer {
+          gap: 9px;
+        }
+        .ticks {
+          font-size: 10px;
+        }
+      }
+
+      :root {
+        color-scheme: dark;
+        --background: #080e18;
+        --foreground: #e4eaf5;
+        --muted-foreground: #9aaec4;
+        --primary: #dbe4ef;
+        --primary-foreground: #07101b;
+        --secondary: #172434;
+        --border: #263647;
+      }
+      body {
+        background: var(--background);
+        padding: 24px 16px;
+      }
+      #idea-study {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      @media (max-width: 440px) {
+        body {
+          padding: 12px 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="idea-study">
+      <div class="stage" id="scene">
+        <div class="eyebrow">Training / point cloud study</div>
+        <div class="universe-label">SPACE OF ALL POSSIBLE IDEAS</div>
+        <div class="legend">
+          <span class="key"><i></i>Model space · points only</span>
+        </div>
+        <div class="chapter" id="chapter">Islands of possibility</div>
+        <div class="event" id="event">
+          Separate regions emerge within the larger space.
+        </div>
+        <span class="sr" id="description"
+          >An illustrative model space composed entirely of individual points,
+          with no enclosing surfaces, connecting lines, or haze. Points form
+          irregular concentrations, gaps, and disconnected regions inside the
+          reference sphere. Training reveals new points and removes some during
+          fine-tuning. The meaning of point density remains exploratory. Drag to
+          orbit, scroll to zoom, or use arrow keys while the training slider is
+          focused.</span
+        >
+      </div>
+      <div class="controls">
+        <div class="timeline-head">
+          <label for="training">Training progression</label
+          ><span id="phase" aria-live="polite">Early training</span>
+        </div>
+        <div class="transport">
+          <button type="button" id="play">Pause</button
+          ><input
+            id="training"
+            aria-label="Illustrative training progression"
+            type="range"
+            min="0"
+            max="1000"
+            value="240"
+          />
+        </div>
+        <div class="ticks">
+          <span>Initialization</span><span>Pretraining</span
+          ><span>Fine-tuning</span>
+        </div>
+        <div class="point-control">
+          <label for="point-size">Point size</label
+          ><input
+            id="point-size"
+            type="range"
+            min="0.8"
+            max="3.8"
+            step="0.1"
+            value="1.8"
+          /><span id="point-value">1.8</span>
+        </div>
+        <div class="density-control">
+          <label><input type="checkbox" id="hold" />Hold extent fixed</label
+          ><span id="mode">Isolate changes inside the same boundary</span>
+        </div>
+        <div class="footer">
+          <span>Conceptual geometry · no measured model data</span
+          ><label><input type="checkbox" id="rotate" checked />Auto-orbit</label
+          ><span>Drag to orbit · scroll to zoom</span>
+        </div>
+      </div>
+    </div>
+    <script src="../vendor/three/three.min.js"></script>
+    <script>
+      (() => {
+        "use strict";
+        const root = document.getElementById("idea-study"),
+          holder = root.querySelector("#scene"),
+          slider = root.querySelector("#training"),
+          play = root.querySelector("#play"),
+          rotate = root.querySelector("#rotate"),
+          chapter = root.querySelector("#chapter"),
+          event = root.querySelector("#event"),
+          phase = root.querySelector("#phase"),
+          hold = root.querySelector("#hold"),
+          mode = root.querySelector("#mode");
+        try {
+          if (!window.THREE) throw Error("The 3D renderer did not load.");
+          const reduced = matchMedia(
+            "(prefers-reduced-motion: reduce)",
+          ).matches;
+          let playing = !reduced,
+            t = 0.6,
+            yaw = 0.45,
+            pitch = 0.18,
+            zoom = 4.6,
+            drag = false,
+            lastX = 0,
+            lastY = 0,
+            lastFrame = 0,
+            lastBuild = -1,
+            renderedT = -1,
+            arrived = 0;
+          if (reduced) {
+            play.textContent = "Play";
+            rotate.checked = false;
+          }
+          const renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true,
+            powerPreference: "high-performance",
+          });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+          renderer.setClearColor(0, 0);
+          renderer.outputColorSpace = THREE.SRGBColorSpace;
+          holder.prepend(renderer.domElement);
+          renderer.domElement.setAttribute("role", "img");
+          renderer.domElement.setAttribute(
+            "aria-label",
+            "Interactive three dimensional conceptual idea space",
+          );
+          renderer.domElement.setAttribute("aria-describedby", "description");
+          const scene = new THREE.Scene(),
+            camera = new THREE.PerspectiveCamera(37, 1, 0.1, 30),
+            world = new THREE.Group();
+          scene.add(world);
+          const shell = new THREE.Group();
+          world.add(shell);
+          function line(points, color, opacity) {
+            const g = new THREE.BufferGeometry().setFromPoints(points);
+            return new THREE.Line(
+              g,
+              new THREE.LineBasicMaterial({
+                color,
+                transparent: true,
+                opacity,
+                depthWrite: false,
+              }),
+            );
+          }
+          for (let lat = -2; lat <= 2; lat++) {
+            const a = (lat * Math.PI) / 6,
+              r = Math.cos(a),
+              y = Math.sin(a),
+              p = [];
+            for (let k = 0; k <= 160; k++) {
+              const q = (k / 160) * Math.PI * 2;
+              p.push(new THREE.Vector3(r * Math.cos(q), y, r * Math.sin(q)));
+            }
+            shell.add(line(p, 0x7e9bb8, lat === 0 ? 0.23 : 0.12));
+          }
+          for (let j = 0; j < 6; j++) {
+            const p = [],
+              a = (j * Math.PI) / 6;
+            for (let k = 0; k <= 160; k++) {
+              const q = (k / 160) * Math.PI * 2;
+              p.push(
+                new THREE.Vector3(
+                  Math.cos(q) * Math.cos(a),
+                  Math.sin(q),
+                  Math.cos(q) * Math.sin(a),
+                ),
+              );
+            }
+            shell.add(line(p, 0x7e9bb8, 0.13));
+          }
+          // A camera-facing circumference makes the universe boundary legible from every angle.
+          const ringPts = [];
+          for (let k = 0; k <= 200; k++) {
+            const q = (k / 200) * Math.PI * 2;
+            ringPts.push(new THREE.Vector3(Math.cos(q), Math.sin(q), 0));
+          }
+          const ring = line(ringPts, 0xabc6de, 0.46);
+          scene.add(ring);
+          let seed = 77;
+          function rand() {
+            seed = (seed * 1664525 + 1013904223) >>> 0;
+            return seed / 4294967296;
+          }
+          const lobes = [
+            [-0.34, 0.16, 0.08, 0.31, 0.01],
+            [0.16, -0.28, 0.12, 0.32, 0.1],
+            [0.28, 0.3, -0.19, 0.27, 0.21],
+            [-0.18, -0.16, -0.36, 0.26, 0.27],
+            [0.52, 0.03, 0.22, 0.21, 0.34],
+            [-0.5, -0.35, 0.05, 0.18, 0.42],
+            [0.02, 0.54, 0.1, 0.2, 0.48],
+            [-0.48, 0.46, -0.19, 0.16, 0.57],
+            [0.26, -0.52, -0.26, 0.17, 0.63],
+            [0.55, 0.38, 0.16, 0.12, 0.73],
+            [-0.56, 0.06, -0.43, 0.13, 0.8],
+          ];
+          function smooth(a, b, v) {
+            const u = Math.max(0, Math.min(1, (v - a) / (b - a)));
+            return u * u * (3 - 2 * u);
+          }
+          let current = [];
+          function configure(v) {
+            const ft = smooth(0.8, 1, v);
+            current = lobes.map((b, i) => {
+              let s = smooth(b[4], b[4] + 0.29, v),
+                r = b[3] * (0.08 + 0.92 * s);
+              if (i === 1 || i === 4 || i === 8) r += ft * 0.08;
+              if (i === 5 || i === 7) r *= 1 - ft * 0.82;
+              return [b[0], b[1], b[2], r];
+            });
+          }
+          function field(x, y, z) {
+            const wx = x + 0.082 * Math.sin(y * 12 + z * 7),
+              wy = y + 0.068 * Math.sin(z * 13 - x * 6),
+              wz = z + 0.075 * Math.sin(x * 11 + y * 9);
+            let d = 9;
+            for (const b of current) {
+              const dx = wx - b[0],
+                dy = wy - b[1],
+                dz = wz - b[2];
+              const q = Math.sqrt(dx * dx + dy * dy + dz * dz) - b[3];
+              const h = Math.max(0.045 - Math.abs(d - q), 0) / 0.045;
+              d = Math.min(d, q) - h * h * 0.045 * 0.25;
+            }
+            d +=
+              0.023 * Math.sin(x * 23 + y * 17) * Math.sin(y * 21 - z * 19) +
+              0.009 * Math.cos(z * 43 + x * 17);
+            // Persistent through-hole and enclosed voids are deliberately independent of growth.
+            const tunnel =
+              0.092 -
+              Math.sqrt((x + 0.27) * (x + 0.27) + (y - 0.15) * (y - 0.15));
+            const cave =
+              0.13 -
+              Math.sqrt((x - 0.19) ** 2 + (y + 0.2) ** 2 + (z - 0.12) ** 2);
+            const cut = 0.085 - Math.sqrt((y - 0.32) ** 2 + (z + 0.17) ** 2);
+            return Math.max(
+              d,
+              tunnel,
+              cave,
+              cut,
+              Math.sqrt(x * x + y * y + z * z) - 0.92,
+            );
+          }
+          // Stable particle positions: enrichment reveals more detail without moving the frontier.
+          const candidates = [];
+          for (let i = 0; i < 220000; i++) {
+            const x = rand() * 1.84 - 0.92,
+              y = rand() * 1.84 - 0.92,
+              z = rand() * 1.84 - 0.92;
+            if (x * x + y * y + z * z < 0.85) candidates.push(x, y, z, rand());
+          }
+          const densityUniforms = {
+            uProgress: { value: t },
+            uSize: { value: 1.8 },
+            uHaze: { value: 0 },
+            uDpr: { value: renderer.getPixelRatio() },
+          };
+          const particleVertex = `attribute float aSeed;attribute float aBirth;attribute float aRegion;attribute float aCore;uniform float uProgress;uniform float uSize;uniform float uHaze;uniform float uDpr;varying float vAlpha;varying vec3 vColor;
+void main(){float age=smoothstep(aBirth,aBirth+.43,uProgress);float tune=smoothstep(.8,1.,uProgress);float reduction=(1.-smoothstep(.3,.5,aRegion))*.7*tune;float density=clamp(.035+age*(.26+.7*aCore)-reduction,.025,1.);float visible=smoothstep(aSeed-.045,aSeed+.045,density);vAlpha=visible*(.48+.35*density);vColor=vec3(.39,.88,.95);vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=clamp(uSize*uDpr*4./(-p.z),1.,24.);}
+`;
+          const particleFragment = `uniform float uHaze;varying float vAlpha;varying vec3 vColor;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;float glow=1.-smoothstep(.35,1.,r);float a=vAlpha*glow*mix(.9,.037,uHaze);if(a<.001)discard;gl_FragColor=vec4(vColor,a);}`;
+          function particleMaterial(uniforms) {
+            return new THREE.ShaderMaterial({
+              uniforms,
+              vertexShader: particleVertex,
+              fragmentShader: particleFragment,
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+            });
+          }
+          const points = new THREE.Points(
+            new THREE.BufferGeometry(),
+            particleMaterial(densityUniforms),
+          );
+          world.add(points);
+          function buildParticles() {
+            const p = [],
+              seeds = [],
+              birth = [],
+              region = [],
+              core = [];
+            for (let i = 0; i < candidates.length; i += 4) {
+              const x = candidates[i],
+                y = candidates[i + 1],
+                z = candidates[i + 2];
+              if (field(x, y, z) >= -0.006) continue;
+              let nearest = 0,
+                dist = 9;
+              for (let j = 0; j < lobes.length; j++) {
+                const l = lobes[j],
+                  d = Math.hypot(x - l[0], y - l[1], z - l[2]) / l[3];
+                if (d < dist) {
+                  dist = d;
+                  nearest = j;
+                }
+              }
+              const l = lobes[nearest],
+                filament =
+                  0.5 +
+                  0.5 *
+                    Math.sin(x * 19 + Math.sin(y * 12)) *
+                    Math.cos(z * 16 - y * 7);
+              p.push(x, y, z);
+              seeds.push(candidates[i + 3]);
+              birth.push(l[4] * 0.59);
+              region.push((nearest * 0.381966) % 1);
+              core.push(
+                Math.max(
+                  0.12,
+                  Math.min(1, (1 - dist * 0.5) * 0.5 + filament * 0.5),
+                ),
+              );
+            }
+            const g = new THREE.BufferGeometry();
+            g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
+            g.setAttribute("aSeed", new THREE.Float32BufferAttribute(seeds, 1));
+            g.setAttribute(
+              "aBirth",
+              new THREE.Float32BufferAttribute(birth, 1),
+            );
+            g.setAttribute(
+              "aRegion",
+              new THREE.Float32BufferAttribute(region, 1),
+            );
+            g.setAttribute("aCore", new THREE.Float32BufferAttribute(core, 1));
+            points.geometry.dispose();
+            points.geometry = g;
+          }
+          function rebuild(v) {
+            configure(v);
+            buildParticles();
+            renderedT = v;
+          }
+          const pointSize = root.querySelector("#point-size"),
+            pointValue = root.querySelector("#point-value");
+          pointSize.oninput = () => {
+            densityUniforms.uSize.value = Number(pointSize.value);
+            pointValue.textContent = Number(pointSize.value).toFixed(1);
+          };
+          function updateText() {
+            const stage = t < 0.28 ? 0 : t < 0.55 ? 1 : t < 0.8 ? 2 : 3;
+            const titles = [
+              "Scattered beginnings",
+              "Patterns take shape",
+              "A space made of points",
+              "The pattern changes",
+            ];
+            const captions = hold.checked
+              ? [
+                  "Sparse points within a fixed extent.",
+                  "Concentrations emerge within the same extent.",
+                  "Clusters, gaps, and isolated points define the shape.",
+                  "Some concentrations strengthen; others thin out.",
+                ]
+              : [
+                  "Separate concentrations begin to appear.",
+                  "New points extend and fill in the model’s space.",
+                  "Clusters, gaps, and isolated points define the shape.",
+                  "Some regions extend; others thin out or disappear.",
+                ];
+            chapter.textContent = titles[stage];
+            event.textContent = captions[stage];
+            const p = [
+              "Early training",
+              "Pretraining",
+              "Later pretraining",
+              "Fine-tuning",
+            ][stage];
+            if (phase.textContent !== p) phase.textContent = p;
+            slider.value = Math.round(t * 1000);
+            slider.setAttribute(
+              "aria-valuetext",
+              p + ", illustrative timeline " + Math.round(t * 100) + " percent",
+            );
+            densityUniforms.uProgress.value = t;
+            mode.textContent = hold.checked
+              ? "Only point concentration changes"
+              : "Extent and concentration evolve together";
+          }
+          hold.onchange = () => {
+            rebuild(hold.checked ? 0.8 : t);
+            updateText();
+          };
+          play.onclick = () => {
+            if (t >= 1) {
+              t = 0;
+              arrived = 0;
+            }
+            playing = !playing;
+            play.textContent = playing ? "Pause" : "Play";
+          };
+          slider.oninput = () => {
+            t = Number(slider.value) / 1000;
+            playing = false;
+            play.textContent = "Play";
+            updateText();
+          };
+          renderer.domElement.addEventListener("pointerdown", (e) => {
+            drag = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            renderer.domElement.setPointerCapture(e.pointerId);
+          });
+          renderer.domElement.addEventListener("pointermove", (e) => {
+            if (!drag) return;
+            yaw += (e.clientX - lastX) * 0.008;
+            pitch = Math.max(
+              -1.3,
+              Math.min(1.3, pitch + (e.clientY - lastY) * 0.008),
+            );
+            lastX = e.clientX;
+            lastY = e.clientY;
+          });
+          renderer.domElement.addEventListener(
+            "pointerup",
+            () => (drag = false),
+          );
+          renderer.domElement.addEventListener(
+            "pointercancel",
+            () => (drag = false),
+          );
+          renderer.domElement.addEventListener(
+            "wheel",
+            (e) => {
+              e.preventDefault();
+              zoom = Math.max(2.7, Math.min(6.8, zoom + e.deltaY * 0.003));
+            },
+            { passive: false },
+          );
+          function resize() {
+            const w = holder.clientWidth,
+              h = holder.clientHeight;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+          }
+          new ResizeObserver(resize).observe(holder);
+          resize();
+          rebuild(hold.checked ? 0.8 : t);
+          updateText();
+          let frames = 0;
+          function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min((now - lastFrame) / 1000, 0.05);
+            lastFrame = now;
+            if (document.hidden) return;
+            if (playing) {
+              t = Math.min(1, t + dt / 36);
+              if (t === 1) {
+                playing = false;
+                play.textContent = "Replay";
+              }
+              updateText();
+            }
+            if (
+              !hold.checked &&
+              Math.abs(t - renderedT) > 0.005 &&
+              now - lastBuild > 220
+            ) {
+              rebuild(t);
+              lastBuild = performance.now();
+            }
+            if (rotate.checked && !drag) yaw += dt * 0.055;
+            world.rotation.set(pitch, yaw, 0);
+            camera.position.set(
+              0,
+              0,
+              zoom * (camera.aspect < 1 ? (1 / camera.aspect) * 0.9 : 1),
+            );
+            camera.lookAt(0, 0, 0);
+            ring.quaternion.copy(camera.quaternion);
+            renderer.render(scene, camera);
+            frames++;
+          }
+          requestAnimationFrame(animate);
+          window.ideaStudy = {
+            setProgress(v) {
+              t = Math.max(0, Math.min(1, v));
+              playing = false;
+              play.textContent = "Play";
+              rebuild(hold.checked ? 0.8 : t);
+              updateText();
+            },
+            getState() {
+              return {
+                progress: t,
+                reachHeld: hold.checked,
+                geometryProgress: renderedT,
+                particles: points.geometry.attributes.position.count,
+                densityProgress: densityUniforms.uProgress.value,
+                modelSurfaces: 0,
+                pointSize: densityUniforms.uSize.value,
+                frames,
+                playing,
+                canvas: [renderer.domElement.width, renderer.domElement.height],
+              };
+            },
+          };
+          console.log(
+            "Point-cloud study ready: points only, training, point size, orbit and zoom.",
+          );
+        } catch (e) {
+          const p = document.createElement("p");
+          p.className = "error";
+          p.setAttribute("role", "alert");
+          p.textContent = "The 3D study could not start: " + e.message;
+          holder.append(p);
+          console.error(e);
+        }
+      })();
+    </script>
+  </body>
+</html>

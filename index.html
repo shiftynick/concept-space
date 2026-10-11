@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Idea Space — a visual language for model reach</title>
+    <meta
+      name="description"
+      content="An interactive 3D conceptual visualizer for model reach, training, and density. Explore a shared space through surfaces and point clouds."
+    />
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <div id="idea-study">
+      <div class="stage" id="scene">
+        <div class="eyebrow">Idea spaces / training story</div>
+        <div class="universe-label">SPACE OF ALL POSSIBLE IDEAS</div>
+        <div class="legend">
+          <span class="key"
+            ><i></i><span id="view-legend">Model space · points</span></span
+          >
+        </div>
+        <div class="annotation" id="label-a" hidden></div>
+        <div class="annotation" id="label-b" hidden></div>
+        <div class="chapter" id="chapter">Islands of possibility</div>
+        <div class="event" id="event">
+          Separate regions emerge within the larger space.
+        </div>
+        <span class="sr" id="description"
+          >One conceptual model space in two interchangeable views. Five
+          chapters show islands emerging, regions connecting, density increasing
+          at fixed reach, one hole filling while another remains, and selective
+          expansion and contraction during fine-tuning. Switch views without
+          changing the camera or training position. Density is represented by
+          point concentration or surface brightness. Drag to orbit, scroll to
+          zoom, or use arrow keys while the training slider is focused.</span
+        >
+      </div>
+      <div class="controls">
+        <div class="view-switch" role="group" aria-label="Representation">
+          <button type="button" id="points-view" aria-pressed="true">
+            Points</button
+          ><button type="button" id="surface-view" aria-pressed="false">
+            Surface</button
+          ><span>Same space · same moment</span>
+        </div>
+        <div class="timeline-head">
+          <label for="training">Training progression</label
+          ><span id="phase" aria-live="polite">Early training</span>
+        </div>
+        <div class="transport">
+          <button type="button" id="play">Pause</button
+          ><input
+            id="training"
+            aria-label="Illustrative training progression"
+            type="range"
+            min="0"
+            max="1000"
+            value="240"
+          />
+        </div>
+        <div class="chapters" role="group" aria-label="Training chapters">
+          <button type="button" data-chapter="0">1 · Emerge</button
+          ><button type="button" data-chapter="1">2 · Connect</button
+          ><button type="button" data-chapter="2">3 · Enrich</button
+          ><button type="button" data-chapter="3">4 · Fill gaps</button
+          ><button type="button" data-chapter="4">5 · Fine-tune</button>
+        </div>
+        <div class="footer">
+          <span>Conceptual geometry · no measured model data</span
+          ><label><input type="checkbox" id="rotate" checked />Auto-orbit</label
+          ><span>Drag to orbit · scroll to zoom</span>
+        </div>
+      </div>
+    </div>
+    <script src="vendor/three/three.min.js"></script>
+    <script src="src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+# Local generation files and inline conversation previews
+/output/
+
+# Local tooling and editor files
+node_modules/
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/

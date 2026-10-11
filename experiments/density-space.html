@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Idea Space — density space</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: var(--foreground, #e4eaf5);
+        background: transparent;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      #idea-study {
+        --ink: #e8eff9;
+        --quiet: #9aaec4;
+        --line: #283747;
+        color: var(--ink);
+      }
+      .stage {
+        position: relative;
+        height: 540px;
+        overflow: hidden;
+        border-radius: 16px;
+        background: radial-gradient(
+          ellipse at 48% 50%,
+          #132334 0%,
+          #0a111e 52%,
+          #070c15 100%
+        );
+        padding: 20px;
+      }
+      .stage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        cursor: grab;
+      }
+      .stage canvas:active {
+        cursor: grabbing;
+      }
+      .eyebrow {
+        position: absolute;
+        top: 22px;
+        left: 22px;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--quiet);
+        pointer-events: none;
+      }
+      .chapter {
+        position: absolute;
+        left: 22px;
+        bottom: 51px;
+        font-size: 23px;
+        font-weight: 500;
+        letter-spacing: -0.035em;
+        pointer-events: none;
+      }
+      .event {
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        bottom: 24px;
+        color: var(--quiet);
+        font-size: 12px;
+        pointer-events: none;
+      }
+      .universe-label {
+        position: absolute;
+        top: 55px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: #b7c5d5;
+        pointer-events: none;
+      }
+      .legend {
+        display: flex;
+        gap: 17px;
+        flex-wrap: wrap;
+        position: absolute;
+        left: 22px;
+        top: 82px;
+        font-size: 11px;
+        color: var(--quiet);
+        pointer-events: none;
+      }
+      .key {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .key i {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background: #61ded8;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #61ded877;
+      }
+      .key:last-child i {
+        background: #ffc583;
+        box-shadow: 0 0 10px #ffc58377;
+      }
+      .density-control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        margin-top: 17px;
+        color: var(--foreground, #e4eaf5);
+      }
+      .density-control label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .density-control span {
+        color: var(--muted-foreground, #95a3b6);
+        font-size: 11px;
+      }
+      .controls {
+        padding: 16px 0 0;
+        color: var(--foreground, #e4eaf5);
+      }
+      .timeline-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+      .timeline-head span:last-child {
+        font-variant-numeric: tabular-nums;
+        color: var(--muted-foreground, #95a3b6);
+      }
+      .transport {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .transport button {
+        color: var(--primary-foreground, #0b111c);
+        background: var(--primary, #dbe4ef);
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-width: 81px;
+        cursor: pointer;
+      }
+      .transport input {
+        width: 100%;
+        min-width: 0;
+        accent-color: var(--foreground, #dbe4ef);
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        margin: 9px 0 0 95px;
+        color: var(--muted-foreground, #95a3b6);
+        font-size: 11px;
+      }
+      .footer {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        color: var(--muted-foreground, #95a3b6);
+        font-size: 11px;
+        margin-top: 17px;
+      }
+      .footer label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .footer input {
+        accent-color: var(--foreground, #dbe4ef);
+      }
+      .error {
+        position: absolute;
+        inset: 140px 24px auto;
+        line-height: 1.5;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+      }
+      @media (max-width: 440px) {
+        .stage {
+          height: 480px;
+        }
+        .chapter {
+          font-size: 21px;
+        }
+        .event {
+          bottom: 19px;
+          max-width: 280px;
+          line-height: 1.5;
+        }
+        .chapter {
+          bottom: 65px;
+        }
+        .legend {
+          top: 78px;
+        }
+        .universe-label {
+          top: 51px;
+        }
+        .footer {
+          gap: 9px;
+        }
+        .ticks {
+          font-size: 10px;
+        }
+      }
+
+      :root {
+        color-scheme: dark;
+        --background: #080e18;
+        --foreground: #e4eaf5;
+        --muted-foreground: #9aaec4;
+        --primary: #dbe4ef;
+        --primary-foreground: #07101b;
+        --secondary: #172434;
+        --border: #263647;
+      }
+      body {
+        background: var(--background);
+        padding: 24px 16px;
+      }
+      #idea-study {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      @media (max-width: 440px) {
+        body {
+          padding: 12px 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="idea-study">
+      <div class="stage" id="scene">
+        <div class="eyebrow">Training / density study</div>
+        <div class="universe-label">SPACE OF ALL POSSIBLE IDEAS</div>
+        <div class="legend">
+          <span class="key"><i></i>Reachable boundary</span
+          ><span class="key"><i></i>Denser = richer representation</span>
+        </div>
+        <div class="chapter" id="chapter">Islands of possibility</div>
+        <div class="event" id="event">
+          Separate regions emerge within the larger space.
+        </div>
+        <span class="sr" id="description"
+          >An illustrative luminous model space inside a spherical universe.
+          Particle concentration represents richer internal representation. Hold
+          reach fixed to watch density change without changing what is
+          reachable. Uncheck it to animate reach and density together. Density
+          does not depict prompt history or confidence. Drag to orbit, scroll to
+          zoom, or use arrow keys while the training slider is focused.</span
+        >
+      </div>
+      <div class="controls">
+        <div class="timeline-head">
+          <label for="training">Training / internal enrichment</label
+          ><span id="phase" aria-live="polite">Early training</span>
+        </div>
+        <div class="transport">
+          <button type="button" id="play">Pause</button
+          ><input
+            id="training"
+            aria-label="Illustrative training progression"
+            type="range"
+            min="0"
+            max="1000"
+            value="240"
+          />
+        </div>
+        <div class="ticks">
+          <span>Sparse</span><span>Enrichment</span><span>Redistribution</span>
+        </div>
+        <div class="density-control">
+          <label
+            ><input type="checkbox" id="hold" checked />Hold reach fixed</label
+          ><span id="mode">Isolate changes inside the same boundary</span>
+        </div>
+        <div class="footer">
+          <span>Conceptual geometry · no measured model data</span
+          ><label><input type="checkbox" id="rotate" checked />Auto-orbit</label
+          ><span>Drag to orbit · scroll to zoom</span>
+        </div>
+      </div>
+    </div>
+    <script src="../vendor/three/three.min.js"></script>
+    <script>
+      (() => {
+        "use strict";
+        const root = document.getElementById("idea-study"),
+          holder = root.querySelector("#scene"),
+          slider = root.querySelector("#training"),
+          play = root.querySelector("#play"),
+          rotate = root.querySelector("#rotate"),
+          chapter = root.querySelector("#chapter"),
+          event = root.querySelector("#event"),
+          phase = root.querySelector("#phase"),
+          hold = root.querySelector("#hold"),
+          mode = root.querySelector("#mode");
+        try {
+          if (!window.THREE) throw Error("The 3D renderer did not load.");
+          const reduced = matchMedia(
+            "(prefers-reduced-motion: reduce)",
+          ).matches;
+          let playing = !reduced,
+            t = 0.38,
+            yaw = 0.45,
+            pitch = 0.18,
+            zoom = 4.6,
+            drag = false,
+            lastX = 0,
+            lastY = 0,
+            lastFrame = 0,
+            lastBuild = -1,
+            renderedT = -1,
+            arrived = 0;
+          if (reduced) {
+            play.textContent = "Play";
+            rotate.checked = false;
+          }
+          const renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true,
+            powerPreference: "high-performance",
+          });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+          renderer.setClearColor(0, 0);
+          renderer.outputColorSpace = THREE.SRGBColorSpace;
+          holder.prepend(renderer.domElement);
+          renderer.domElement.setAttribute("role", "img");
+          renderer.domElement.setAttribute(
+            "aria-label",
+            "Interactive three dimensional conceptual idea space",
+          );
+          renderer.domElement.setAttribute("aria-describedby", "description");
+          const scene = new THREE.Scene(),
+            camera = new THREE.PerspectiveCamera(37, 1, 0.1, 30),
+            world = new THREE.Group();
+          scene.add(world);
+          scene.add(new THREE.HemisphereLight(0xa7efff, 0x16203e, 2.2));
+          const light = new THREE.DirectionalLight(0x83f5ee, 3.2);
+          light.position.set(3, 4, 4);
+          scene.add(light);
+          const rim = new THREE.DirectionalLight(0x9a96ff, 3.8);
+          rim.position.set(-3, 1, -2);
+          scene.add(rim);
+          const warm = new THREE.DirectionalLight(0xffcea2, 0.7);
+          warm.position.set(0, -3, 2);
+          scene.add(warm);
+          const shell = new THREE.Group();
+          world.add(shell);
+          function line(points, color, opacity) {
+            const g = new THREE.BufferGeometry().setFromPoints(points);
+            return new THREE.Line(
+              g,
+              new THREE.LineBasicMaterial({
+                color,
+                transparent: true,
+                opacity,
+                depthWrite: false,
+              }),
+            );
+          }
+          for (let lat = -2; lat <= 2; lat++) {
+            const a = (lat * Math.PI) / 6,
+              r = Math.cos(a),
+              y = Math.sin(a),
+              p = [];
+            for (let k = 0; k <= 160; k++) {
+              const q = (k / 160) * Math.PI * 2;
+              p.push(new THREE.Vector3(r * Math.cos(q), y, r * Math.sin(q)));
+            }
+            shell.add(line(p, 0x7e9bb8, lat === 0 ? 0.23 : 0.12));
+          }
+          for (let j = 0; j < 6; j++) {
+            const p = [],
+              a = (j * Math.PI) / 6;
+            for (let k = 0; k <= 160; k++) {
+              const q = (k / 160) * Math.PI * 2;
+              p.push(
+                new THREE.Vector3(
+                  Math.cos(q) * Math.cos(a),
+                  Math.sin(q),
+                  Math.cos(q) * Math.sin(a),
+                ),
+              );
+            }
+            shell.add(line(p, 0x7e9bb8, 0.13));
+          }
+          // A camera-facing circumference makes the universe boundary legible from every angle.
+          const ringPts = [];
+          for (let k = 0; k <= 200; k++) {
+            const q = (k / 200) * Math.PI * 2;
+            ringPts.push(new THREE.Vector3(Math.cos(q), Math.sin(q), 0));
+          }
+          const ring = line(ringPts, 0xabc6de, 0.46);
+          scene.add(ring);
+          let seed = 77;
+          function rand() {
+            seed = (seed * 1664525 + 1013904223) >>> 0;
+            return seed / 4294967296;
+          }
+          const dust = [];
+          for (let i = 0; i < 1150; i++) {
+            const y = rand() * 2 - 1,
+              a = rand() * Math.PI * 2,
+              r = Math.sqrt(1 - y * y);
+            dust.push(r * Math.cos(a), y, r * Math.sin(a));
+          }
+          const dg = new THREE.BufferGeometry();
+          dg.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(dust, 3),
+          );
+          const dp = new THREE.Points(
+            dg,
+            new THREE.PointsMaterial({
+              color: 0xa3c4df,
+              size: 0.0045,
+              transparent: true,
+              opacity: 0.4,
+              depthWrite: false,
+            }),
+          );
+          shell.add(dp);
+          const material = new THREE.ShaderMaterial({
+            transparent: true,
+            depthWrite: false,
+            side: THREE.FrontSide,
+            blending: THREE.AdditiveBlending,
+            vertexShader: `varying vec3 vNormal;varying vec3 vView;void main(){vec4 p=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=normalize(-p.xyz);gl_Position=projectionMatrix*p;}`,
+            fragmentShader: `varying vec3 vNormal;varying vec3 vView;void main(){float f=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),2.5);gl_FragColor=vec4(.24,.82,.87,.025+f*.24);}`,
+          });
+          const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
+          world.add(mesh);
+          const wire = new THREE.Mesh(
+            mesh.geometry,
+            new THREE.MeshBasicMaterial({
+              color: 0xb6fff2,
+              wireframe: true,
+              transparent: true,
+              opacity: 0.015,
+              depthWrite: false,
+            }),
+          );
+          world.add(wire);
+          const lobes = [
+            [-0.34, 0.16, 0.08, 0.31, 0.01],
+            [0.16, -0.28, 0.12, 0.32, 0.1],
+            [0.28, 0.3, -0.19, 0.27, 0.21],
+            [-0.18, -0.16, -0.36, 0.26, 0.27],
+            [0.52, 0.03, 0.22, 0.21, 0.34],
+            [-0.5, -0.35, 0.05, 0.18, 0.42],
+            [0.02, 0.54, 0.1, 0.2, 0.48],
+            [-0.48, 0.46, -0.19, 0.16, 0.57],
+            [0.26, -0.52, -0.26, 0.17, 0.63],
+            [0.55, 0.38, 0.16, 0.12, 0.73],
+            [-0.56, 0.06, -0.43, 0.13, 0.8],
+          ];
+          function smooth(a, b, v) {
+            const u = Math.max(0, Math.min(1, (v - a) / (b - a)));
+            return u * u * (3 - 2 * u);
+          }
+          let current = [];
+          function configure(v) {
+            const ft = smooth(0.8, 1, v);
+            current = lobes.map((b, i) => {
+              let s = smooth(b[4], b[4] + 0.29, v),
+                r = b[3] * (0.08 + 0.92 * s);
+              if (i === 1 || i === 4 || i === 8) r += ft * 0.08;
+              if (i === 5 || i === 7) r *= 1 - ft * 0.82;
+              return [b[0], b[1], b[2], r];
+            });
+          }
+          function field(x, y, z) {
+            const wx = x + 0.082 * Math.sin(y * 12 + z * 7),
+              wy = y + 0.068 * Math.sin(z * 13 - x * 6),
+              wz = z + 0.075 * Math.sin(x * 11 + y * 9);
+            let d = 9;
+            for (const b of current) {
+              const dx = wx - b[0],
+                dy = wy - b[1],
+                dz = wz - b[2];
+              const q = Math.sqrt(dx * dx + dy * dy + dz * dz) - b[3];
+              const h = Math.max(0.045 - Math.abs(d - q), 0) / 0.045;
+              d = Math.min(d, q) - h * h * 0.045 * 0.25;
+            }
+            d +=
+              0.023 * Math.sin(x * 23 + y * 17) * Math.sin(y * 21 - z * 19) +
+              0.009 * Math.cos(z * 43 + x * 17);
+            // Persistent through-hole and enclosed voids are deliberately independent of growth.
+            const tunnel =
+              0.092 -
+              Math.sqrt((x + 0.27) * (x + 0.27) + (y - 0.15) * (y - 0.15));
+            const cave =
+              0.13 -
+              Math.sqrt((x - 0.19) ** 2 + (y + 0.2) ** 2 + (z - 0.12) ** 2);
+            const cut = 0.085 - Math.sqrt((y - 0.32) ** 2 + (z + 0.17) ** 2);
+            return Math.max(
+              d,
+              tunnel,
+              cave,
+              cut,
+              Math.sqrt(x * x + y * y + z * z) - 0.92,
+            );
+          }
+          // Stable particle positions: enrichment reveals more detail without moving the frontier.
+          const candidates = [];
+          for (let i = 0; i < 145000; i++) {
+            const x = rand() * 1.84 - 0.92,
+              y = rand() * 1.84 - 0.92,
+              z = rand() * 1.84 - 0.92;
+            if (x * x + y * y + z * z < 0.85) candidates.push(x, y, z, rand());
+          }
+          const densityUniforms = {
+            uProgress: { value: t },
+            uSize: { value: 2.3 },
+            uHaze: { value: 0 },
+            uDpr: { value: renderer.getPixelRatio() },
+          };
+          const particleVertex = `attribute float aSeed;attribute float aBirth;attribute float aRegion;attribute float aCore;uniform float uProgress;uniform float uSize;uniform float uHaze;uniform float uDpr;varying float vAlpha;varying vec3 vColor;
+void main(){float age=smoothstep(aBirth,aBirth+.43,uProgress);float tune=smoothstep(.8,1.,uProgress);float reduction=(1.-smoothstep(.3,.5,aRegion))*.7*tune;float density=clamp(.035+age*(.26+.7*aCore)-reduction,.025,1.);float visible=smoothstep(aSeed-.045,aSeed+.045,density);vAlpha=visible*(.22+.55*density);vec3 cool=mix(vec3(.2,.55,1.),vec3(.29,.95,.86),aRegion);vColor=mix(cool,vec3(1.,.83,.53),smoothstep(.65,.95,density)*.7);vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=clamp(uSize*uDpr*4./(-p.z),1.,24.);}
+`;
+          const particleFragment = `uniform float uHaze;varying float vAlpha;varying vec3 vColor;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;float glow=exp(-r*r*4.)*(1.-smoothstep(.65,1.,r));float a=vAlpha*glow*mix(.9,.037,uHaze);if(a<.001)discard;gl_FragColor=vec4(vColor,a);}`;
+          function particleMaterial(uniforms) {
+            return new THREE.ShaderMaterial({
+              uniforms,
+              vertexShader: particleVertex,
+              fragmentShader: particleFragment,
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+            });
+          }
+          const points = new THREE.Points(
+            new THREE.BufferGeometry(),
+            particleMaterial(densityUniforms),
+          );
+          world.add(points);
+          const hazeUniforms = {
+            ...densityUniforms,
+            uSize: { value: 17 },
+            uHaze: { value: 1 },
+          };
+          const haze = new THREE.Points(
+            points.geometry,
+            particleMaterial(hazeUniforms),
+          );
+          world.add(haze);
+          function buildParticles() {
+            const p = [],
+              seeds = [],
+              birth = [],
+              region = [],
+              core = [];
+            for (let i = 0; i < candidates.length; i += 4) {
+              const x = candidates[i],
+                y = candidates[i + 1],
+                z = candidates[i + 2];
+              if (field(x, y, z) >= -0.006) continue;
+              let nearest = 0,
+                dist = 9;
+              for (let j = 0; j < lobes.length; j++) {
+                const l = lobes[j],
+                  d = Math.hypot(x - l[0], y - l[1], z - l[2]) / l[3];
+                if (d < dist) {
+                  dist = d;
+                  nearest = j;
+                }
+              }
+              const l = lobes[nearest],
+                filament =
+                  0.5 +
+                  0.5 *
+                    Math.sin(x * 19 + Math.sin(y * 12)) *
+                    Math.cos(z * 16 - y * 7);
+              p.push(x, y, z);
+              seeds.push(candidates[i + 3]);
+              birth.push(l[4] * 0.59);
+              region.push((nearest * 0.381966) % 1);
+              core.push(
+                Math.max(
+                  0.12,
+                  Math.min(1, (1 - dist * 0.5) * 0.5 + filament * 0.5),
+                ),
+              );
+            }
+            const g = new THREE.BufferGeometry();
+            g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
+            g.setAttribute("aSeed", new THREE.Float32BufferAttribute(seeds, 1));
+            g.setAttribute(
+              "aBirth",
+              new THREE.Float32BufferAttribute(birth, 1),
+            );
+            g.setAttribute(
+              "aRegion",
+              new THREE.Float32BufferAttribute(region, 1),
+            );
+            g.setAttribute("aCore", new THREE.Float32BufferAttribute(core, 1));
+            points.geometry.dispose();
+            points.geometry = g;
+            haze.geometry = g;
+          }
+          const N = 35,
+            side = N + 1,
+            lo = -0.95,
+            step = 1.9 / N,
+            count = side ** 3,
+            values = new Float32Array(count),
+            gradients = new Float32Array(count * 3),
+            coords = new Float32Array(count * 3);
+          let ii = 0;
+          for (let z = 0; z <= N; z++)
+            for (let y = 0; y <= N; y++)
+              for (let x = 0; x <= N; x++) {
+                coords[ii * 3] = lo + x * step;
+                coords[ii * 3 + 1] = lo + y * step;
+                coords[ii * 3 + 2] = lo + z * step;
+                ii++;
+              }
+          const tetra = [
+              [0, 5, 1, 6],
+              [0, 1, 2, 6],
+              [0, 2, 3, 6],
+              [0, 3, 7, 6],
+              [0, 7, 4, 6],
+              [0, 4, 5, 6],
+            ],
+            offs = [
+              0,
+              1,
+              1 + side,
+              side,
+              side * side,
+              side * side + 1,
+              side * side + 1 + side,
+              side * side + side,
+            ];
+          const teal = new THREE.Color(0x42cfc2),
+            blue = new THREE.Color(0x637cce),
+            gold = new THREE.Color(0xffce91);
+          function rebuild(v) {
+            configure(v);
+            for (let i = 0; i < count; i++)
+              values[i] = field(
+                coords[i * 3],
+                coords[i * 3 + 1],
+                coords[i * 3 + 2],
+              );
+            for (let z = 0; z <= N; z++)
+              for (let y = 0; y <= N; y++)
+                for (let x = 0; x <= N; x++) {
+                  const i = x + y * side + z * side * side;
+                  gradients[i * 3] =
+                    values[i + (x < N ? 1 : 0)] - values[i - (x > 0 ? 1 : 0)];
+                  gradients[i * 3 + 1] =
+                    values[i + (y < N ? side : 0)] -
+                    values[i - (y > 0 ? side : 0)];
+                  gradients[i * 3 + 2] =
+                    values[i + (z < N ? side * side : 0)] -
+                    values[i - (z > 0 ? side * side : 0)];
+                }
+            const verts = [],
+              cols = [],
+              normals = [];
+            function edge(a, b) {
+              const u = values[a] / (values[a] - values[b]);
+              const nx =
+                  gradients[a * 3] + u * (gradients[b * 3] - gradients[a * 3]),
+                ny =
+                  gradients[a * 3 + 1] +
+                  u * (gradients[b * 3 + 1] - gradients[a * 3 + 1]),
+                nz =
+                  gradients[a * 3 + 2] +
+                  u * (gradients[b * 3 + 2] - gradients[a * 3 + 2]),
+                len = Math.hypot(nx, ny, nz) || 1;
+              return [
+                coords[a * 3] + u * (coords[b * 3] - coords[a * 3]),
+                coords[a * 3 + 1] + u * (coords[b * 3 + 1] - coords[a * 3 + 1]),
+                coords[a * 3 + 2] + u * (coords[b * 3 + 2] - coords[a * 3 + 2]),
+                nx / len,
+                ny / len,
+                nz / len,
+              ];
+            }
+            function tri(a, b, c) {
+              const ux = b[0] - a[0],
+                uy = b[1] - a[1],
+                uz = b[2] - a[2],
+                vx = c[0] - a[0],
+                vy = c[1] - a[1],
+                vz = c[2] - a[2],
+                nx = uy * vz - uz * vy,
+                ny = uz * vx - ux * vz,
+                nz = ux * vy - uy * vx,
+                cx = (a[0] + b[0] + c[0]) / 3,
+                cy = (a[1] + b[1] + c[1]) / 3,
+                cz = (a[2] + b[2] + c[2]) / 3;
+              if (nx * a[3] + ny * a[4] + nz * a[5] < 0) {
+                const q = b;
+                b = c;
+                c = q;
+              }
+              for (const p of [a, b, c]) {
+                verts.push(p[0], p[1], p[2]);
+                normals.push(p[3], p[4], p[5]);
+                let frontier = 0;
+                for (let j = 0; j < lobes.length; j++) {
+                  const l = lobes[j],
+                    q = current[j];
+                  const distance = Math.hypot(
+                    p[0] - q[0],
+                    p[1] - q[1],
+                    p[2] - q[2],
+                  );
+                  const growth = Math.sin(
+                    Math.PI * Math.max(0, Math.min(1, (v - l[4]) / 0.29)),
+                  );
+                  frontier = Math.max(
+                    frontier,
+                    growth * Math.max(0, 1 - Math.abs(distance - q[3]) / 0.07),
+                  );
+                }
+                const color = blue
+                  .clone()
+                  .lerp(
+                    teal,
+                    Math.max(0, Math.min(1, 0.5 + p[1] * 0.65 + p[0] * 0.4)),
+                  )
+                  .lerp(gold, frontier * 0.7);
+                cols.push(color.r, color.g, color.b);
+              }
+            }
+            for (let z = 0; z < N; z++)
+              for (let y = 0; y < N; y++)
+                for (let x = 0; x < N; x++) {
+                  const base = x + y * side + z * side * side,
+                    ids = offs.map((o) => base + o);
+                  let mask = 0;
+                  for (let j = 0; j < 8; j++) if (values[ids[j]] < 0) mask++;
+                  if (mask === 0 || mask === 8) continue;
+                  for (const tt of tetra) {
+                    const inside = [],
+                      outside = [];
+                    for (const j of tt)
+                      (values[ids[j]] < 0 ? inside : outside).push(ids[j]);
+                    if (inside.length === 1)
+                      tri(
+                        edge(inside[0], outside[0]),
+                        edge(inside[0], outside[1]),
+                        edge(inside[0], outside[2]),
+                      );
+                    else if (inside.length === 3)
+                      tri(
+                        edge(outside[0], inside[0]),
+                        edge(outside[0], inside[1]),
+                        edge(outside[0], inside[2]),
+                      );
+                    else if (inside.length === 2) {
+                      const a = edge(inside[0], outside[0]),
+                        b = edge(inside[0], outside[1]),
+                        c = edge(inside[1], outside[0]),
+                        d = edge(inside[1], outside[1]);
+                      tri(a, b, c);
+                      tri(b, d, c);
+                    }
+                  }
+                }
+            const g = new THREE.BufferGeometry();
+            g.setAttribute(
+              "position",
+              new THREE.Float32BufferAttribute(verts, 3),
+            );
+            g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+            g.setAttribute(
+              "normal",
+              new THREE.Float32BufferAttribute(normals, 3),
+            );
+            mesh.geometry.dispose();
+            mesh.geometry = g;
+            wire.geometry = g;
+            buildParticles();
+            renderedT = v;
+          }
+          function updateText() {
+            const stage = t < 0.28 ? 0 : t < 0.55 ? 1 : t < 0.8 ? 2 : 3;
+            const titles = [
+              "Sparse footholds",
+              "Richness within reach",
+              "Uneven internal depth",
+              "Density is redistributed",
+            ];
+            const captions = hold.checked
+              ? [
+                  "The same territory, with sparse internal representation.",
+                  "Structure accumulates without expanding the boundary.",
+                  "Some regions become richer than others, within the same reach.",
+                  "Selected regions intensify; others become sparser.",
+                ]
+              : [
+                  "Small islands form with sparse internal representation.",
+                  "The frontier expands as internal structure develops.",
+                  "Reach and richness evolve at different rates.",
+                  "Fine-tuning reshapes both reach and internal density.",
+                ];
+            chapter.textContent = titles[stage];
+            event.textContent = captions[stage];
+            const p = [
+              "Sparse representation",
+              "Enrichment",
+              "Uneven density",
+              "Fine-tuning",
+            ][stage];
+            if (phase.textContent !== p) phase.textContent = p;
+            slider.value = Math.round(t * 1000);
+            slider.setAttribute(
+              "aria-valuetext",
+              p + ", illustrative timeline " + Math.round(t * 100) + " percent",
+            );
+            densityUniforms.uProgress.value = t;
+            mode.textContent = hold.checked
+              ? "Isolate changes inside the same boundary"
+              : "Animate reach and density together";
+          }
+          hold.onchange = () => {
+            rebuild(hold.checked ? 0.8 : t);
+            updateText();
+          };
+          play.onclick = () => {
+            if (t >= 1) {
+              t = 0;
+              arrived = 0;
+            }
+            playing = !playing;
+            play.textContent = playing ? "Pause" : "Play";
+          };
+          slider.oninput = () => {
+            t = Number(slider.value) / 1000;
+            playing = false;
+            play.textContent = "Play";
+            updateText();
+          };
+          renderer.domElement.addEventListener("pointerdown", (e) => {
+            drag = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            renderer.domElement.setPointerCapture(e.pointerId);
+          });
+          renderer.domElement.addEventListener("pointermove", (e) => {
+            if (!drag) return;
+            yaw += (e.clientX - lastX) * 0.008;
+            pitch = Math.max(
+              -1.3,
+              Math.min(1.3, pitch + (e.clientY - lastY) * 0.008),
+            );
+            lastX = e.clientX;
+            lastY = e.clientY;
+          });
+          renderer.domElement.addEventListener(
+            "pointerup",
+            () => (drag = false),
+          );
+          renderer.domElement.addEventListener(
+            "pointercancel",
+            () => (drag = false),
+          );
+          renderer.domElement.addEventListener(
+            "wheel",
+            (e) => {
+              e.preventDefault();
+              zoom = Math.max(2.7, Math.min(6.8, zoom + e.deltaY * 0.003));
+            },
+            { passive: false },
+          );
+          function resize() {
+            const w = holder.clientWidth,
+              h = holder.clientHeight;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+          }
+          new ResizeObserver(resize).observe(holder);
+          resize();
+          rebuild(hold.checked ? 0.8 : t);
+          updateText();
+          let frames = 0;
+          function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min((now - lastFrame) / 1000, 0.05);
+            lastFrame = now;
+            if (document.hidden) return;
+            if (playing) {
+              t = Math.min(1, t + dt / 36);
+              if (t === 1) {
+                playing = false;
+                play.textContent = "Replay";
+              }
+              updateText();
+            }
+            if (
+              !hold.checked &&
+              Math.abs(t - renderedT) > 0.005 &&
+              now - lastBuild > 220
+            ) {
+              rebuild(t);
+              lastBuild = performance.now();
+            }
+            if (rotate.checked && !drag) yaw += dt * 0.055;
+            world.rotation.set(pitch, yaw, 0);
+            camera.position.set(
+              0,
+              0,
+              zoom * (camera.aspect < 1 ? (1 / camera.aspect) * 0.9 : 1),
+            );
+            camera.lookAt(0, 0, 0);
+            ring.quaternion.copy(camera.quaternion);
+            renderer.render(scene, camera);
+            frames++;
+          }
+          requestAnimationFrame(animate);
+          window.ideaStudy = {
+            setProgress(v) {
+              t = Math.max(0, Math.min(1, v));
+              playing = false;
+              play.textContent = "Play";
+              rebuild(hold.checked ? 0.8 : t);
+              updateText();
+            },
+            getState() {
+              return {
+                progress: t,
+                reachHeld: hold.checked,
+                geometryProgress: renderedT,
+                particles: points.geometry.attributes.position.count,
+                densityProgress: densityUniforms.uProgress.value,
+                triangles: mesh.geometry.attributes.position.count / 3,
+                frames,
+                playing,
+                canvas: [renderer.domElement.width, renderer.domElement.height],
+              };
+            },
+          };
+          console.log(
+            "Density study ready: fixed-reach enrichment and joint training modes.",
+          );
+        } catch (e) {
+          const p = document.createElement("p");
+          p.className = "error";
+          p.setAttribute("role", "alert");
+          p.textContent = "The 3D study could not start: " + e.message;
+          holder.append(p);
+          console.error(e);
+        }
+      })();
+    </script>
+  </body>
+</html>
