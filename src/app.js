@@ -610,6 +610,7 @@
     });
     canvas.addEventListener("pointerup", () => (drag = false));
     canvas.addEventListener("pointercancel", () => (drag = false));
+    canvas.addEventListener("lostpointercapture", () => (drag = false));
     canvas.addEventListener(
       "wheel",
       (e) => {
@@ -704,7 +705,8 @@
         syncGeometry();
         lastBuild = performance.now();
       }
-      if (rotate.checked && !drag) yaw += dt * 0.008;
+      // One revolution in roughly 90 seconds: visible motion without rushing.
+      if (rotate.checked && !drag) yaw += dt * ((Math.PI * 2) / 90);
       world.rotation.set(pitch, yaw, 0);
       camera.position.set(
         0,
