@@ -3,117 +3,407 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Concept Space — a visual language for model reach</title>
+    <meta name="theme-color" content="#090e13" />
+    <title>Concept Space — explore the shape of understanding</title>
     <meta
       name="description"
-      content="An interactive 3D conceptual visualizer for model reach, training, and density. Explore a shared space through surfaces and point clouds."
+      content="An interactive atlas of concepts, learning, and collective knowledge. Explore three-dimensional stories through surfaces and point clouds."
     />
     <link rel="stylesheet" href="src/styles.css" />
+    <link rel="stylesheet" href="src/site.css" />
   </head>
   <body>
-    <div id="idea-study">
-      <div class="stage" id="scene">
-        <div class="eyebrow">Concept Space / training story</div>
-        <div class="universe-label">SPACE OF ALL POSSIBLE IDEAS</div>
-        <div class="legend">
-          <span class="key"
-            ><i></i><span id="view-legend">Model space · points</span></span
-          >
-        </div>
-        <div class="model-legend" id="model-legend">
-          <span><i class="swatch-a"></i>A only</span
-          ><span><i class="swatch-b"></i>B only</span
-          ><span><i class="swatch-shared"></i>Shared</span>
-        </div>
-        <div class="annotation" id="label-a" hidden></div>
-        <div class="annotation" id="label-b" hidden></div>
-        <div class="chapter" id="chapter">Islands of possibility</div>
-        <div class="event" id="event">
-          Separate regions emerge within the larger space.
-        </div>
-        <span class="sr" id="description"
-          >Compare two fictional models in Points or Surface views. Model A has
-          broader reach; Model B has a unique specialty. Filter shared reach or
-          either model’s unique territory. The training story offers five
-          chapters show islands emerging, regions connecting, density increasing
-          at fixed reach, one hole filling while another remains, and selective
-          expansion and contraction during fine-tuning. Switch views without
-          changing the camera or training position. Density is represented by
-          point concentration or surface brightness. Drag to orbit, scroll to
-          zoom, or use arrow keys while the training slider is focused.</span
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <a href="#explore" class="brand" aria-label="Concept Space home"
+        ><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span
+        >Concept Space<span class="brand-note">AN INTERACTIVE ATLAS</span></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#explore" id="explore-nav" aria-current="page">Explore</a
+        ><a href="#about">About</a
+        ><a
+          href="https://github.com/shiftynick/concept-space"
+          target="_blank"
+          rel="noopener"
+          >Source <span aria-hidden="true">↗</span></a
         >
-      </div>
-      <div class="controls">
-        <div class="view-switch" role="group" aria-label="Experience">
-          <button type="button" id="comparison-mode" aria-pressed="true">
-            Compare models</button
-          ><button type="button" id="training-mode" aria-pressed="false">
-            Training story
-          </button>
+      </nav>
+    </header>
+    <main id="main-content">
+      <section id="explore-screen">
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="kicker"><span></span>MAKE THE ABSTRACT EXPLORABLE</p>
+            <h1>The shape of<br /><em>understanding.</em></h1>
+            <p class="hero-deck">
+              What can a mind hold? Where does knowledge end? Step inside a
+              visual world of concepts, connections, and possibilities.
+            </p>
+            <a class="primary-link" href="#scenarios"
+              >Choose a perspective <span aria-hidden="true">↓</span></a
+            >
+            <p class="hero-note">Rotate it. Question it. See it differently.</p>
+          </div>
+          <div class="hero-art">
+            <canvas
+              id="hero-cloud"
+              role="img"
+              aria-label="A rotating conceptual universe of irregular luminous points"
+            ></canvas
+            ><span class="art-label">A SPACE OF POSSIBILITIES</span
+            ><span class="art-coordinate">A METAPHOR, IN THREE DIMENSIONS</span>
+          </div>
         </div>
-        <div class="view-switch" role="group" aria-label="Representation">
-          <button type="button" id="points-view" aria-pressed="true">
-            Points</button
-          ><button type="button" id="surface-view" aria-pressed="false">
-            Surface</button
-          ><span>Same space · same camera</span>
-        </div>
-        <div id="comparison-controls">
-          <div class="model-switch" role="group" aria-label="Model selection">
-            <button type="button" data-model="a" aria-pressed="false">
-              Model A</button
-            ><button type="button" data-model="b" aria-pressed="false">
-              Model B</button
-            ><button type="button" data-model="both" aria-pressed="true">
-              Both</button
-            ><label for="region-filter"
-              >Show
-              <select id="region-filter">
-                <option value="all">All regions</option>
-                <option value="2">Shared reach</option>
-                <option value="0">A only</option>
-                <option value="1">B only</option>
-              </select></label
+        <section
+          class="collection"
+          id="scenarios"
+          aria-labelledby="collection-title"
+        >
+          <div class="section-heading">
+            <div>
+              <p class="kicker">CHOOSE A PERSPECTIVE</p>
+              <h2 id="collection-title">One space. Many stories.</h2>
+            </div>
+            <p>
+              Three starting points for exploring<br />how understanding takes
+              shape.
+            </p>
+          </div>
+          <div class="scenario-grid">
+            <a href="#training" class="scenario-card" data-scenario="training"
+              ><div class="card-art">
+                <canvas
+                  data-art="training"
+                  role="img"
+                  aria-label="Separate regions expanding and connecting"
+                ></canvas
+                ><span class="card-index">01 / LEARNING</span
+                ><span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+              <div class="card-copy">
+                <span class="card-domain">MACHINE INTELLIGENCE</span>
+                <h3>How a model learns</h3>
+                <p>
+                  Watch possibilities emerge, connect, and become richer. Growth
+                  is only part of the story.
+                </p>
+                <span class="card-meta"
+                  >5 moments <span>Explore scenario →</span></span
+                >
+              </div></a
+            >
+            <a
+              href="#comparison"
+              class="scenario-card"
+              data-scenario="comparison"
+              ><div class="card-art">
+                <canvas
+                  data-art="comparison"
+                  role="img"
+                  aria-label="Overlapping cyan and amber concept clouds"
+                ></canvas
+                ><span class="card-index">02 / PERSPECTIVES</span
+                ><span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+              <div class="card-copy">
+                <span class="card-domain">MACHINE INTELLIGENCE</span>
+                <h3>Different minds, shared ground</h3>
+                <p>
+                  Compare what two models can reach—and why broader doesn’t mean
+                  better at everything.
+                </p>
+                <span class="card-meta"
+                  >4 moments <span>Explore scenario →</span></span
+                >
+              </div></a
+            >
+            <a href="#society" class="scenario-card" data-scenario="society"
+              ><div class="card-art">
+                <canvas
+                  data-art="society"
+                  role="img"
+                  aria-label="An amber individual region within a larger teal collective cloud"
+                ></canvas
+                ><span class="card-index">03 / COLLECTIVE KNOWLEDGE</span
+                ><span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+              <div class="card-copy">
+                <span class="card-domain">PEOPLE &amp; CULTURE</span>
+                <h3>One person. A whole society.</h3>
+                <p>
+                  No one carries it all. Explore knowledge within a person,
+                  between people, and beyond living memory.
+                </p>
+                <span class="card-meta"
+                  >3 moments <span>Explore scenario →</span></span
+                >
+              </div></a
             >
           </div>
-          <p class="comparison-note">
-            Illustrative models · shared coordinates · brightness and point
-            concentration suggest density
-          </p>
-        </div>
-        <div id="training-controls" hidden>
-          <div class="timeline-head">
-            <label for="training">Training progression</label
-            ><span id="phase" aria-live="polite">Early training</span>
+        </section>
+        <section class="about-section" id="about" aria-labelledby="about-title">
+          <div>
+            <p class="kicker">A WAY TO THINK, NOT A MEASUREMENT</p>
+            <h2 id="about-title">
+              A metaphor you can<br /><em>move through.</em>
+            </h2>
+            <p>
+              Concept Space turns abstract questions into places you can
+              explore. The geography is invented. The questions are real.
+            </p>
           </div>
-          <div class="transport">
-            <button type="button" id="play">Pause</button
-            ><input
-              id="training"
-              aria-label="Illustrative training progression"
-              type="range"
-              min="0"
-              max="1000"
-              value="160"
-            />
+          <div class="reading-key">
+            <div>
+              <span>01</span>
+              <section>
+                <h3>Extent</h3>
+                <p>What is reachable within the scenario’s assumptions.</p>
+              </section>
+            </div>
+            <div>
+              <span>02</span>
+              <section>
+                <h3>Density</h3>
+                <p>
+                  A visual suggestion of richer representation—not a score or a
+                  measure of confidence.
+                </p>
+              </section>
+            </div>
+            <div>
+              <span>03</span>
+              <section>
+                <h3>Overlap &amp; connection</h3>
+                <p>
+                  Shared territory, different perspectives, and relationships
+                  that change what becomes possible.
+                </p>
+              </section>
+            </div>
           </div>
-          <div class="chapters" role="group" aria-label="Training chapters">
-            <button type="button" data-chapter="0">1 · Emerge</button
-            ><button type="button" data-chapter="1">2 · Connect</button
-            ><button type="button" data-chapter="2">3 · Enrich</button
-            ><button type="button" data-chapter="3">4 · Fill gaps</button
-            ><button type="button" data-chapter="4">5 · Fine-tune</button>
+        </section>
+      </section>
+      <section id="viewer-screen" hidden aria-label="Scenario explorer">
+        <div class="viewer-heading">
+          <div>
+            <a class="back-link" href="#explore">← All perspectives</a>
+            <p class="kicker" id="scenario-category">MACHINE INTELLIGENCE</p>
+            <h1 id="scenario-title">How a model learns</h1>
           </div>
+          <label class="scenario-picker"
+            >Change perspective<select id="scenario-picker">
+              <option value="training">How a model learns</option>
+              <option value="comparison">Different minds, shared ground</option>
+              <option value="society">One person. A whole society.</option>
+            </select></label
+          >
         </div>
-        <div class="footer">
-          <span>Conceptual geometry · no measured model data</span
-          ><label><input type="checkbox" id="rotate" checked />Auto-orbit</label
-          ><span>Drag to orbit · scroll to zoom</span>
+        <div class="viewer-grid">
+          <div id="idea-study">
+            <div class="stage" id="scene">
+              <div class="eyebrow">Concept Space / training story</div>
+              <div class="universe-label">THE SPACE OF POSSIBLE CONCEPTS</div>
+              <div class="legend">
+                <span class="key"
+                  ><i></i
+                  ><span id="view-legend">Model space · points</span></span
+                >
+              </div>
+              <div class="model-legend" id="model-legend">
+                <span><i class="swatch-a"></i>A only</span
+                ><span><i class="swatch-b"></i>B only</span
+                ><span><i class="swatch-shared"></i>Shared</span>
+              </div>
+              <div class="annotation" id="label-a" hidden></div>
+              <div class="annotation" id="label-b" hidden></div>
+              <div class="chapter" id="chapter">Islands of possibility</div>
+              <div class="event" id="event">
+                Separate regions emerge within the larger space.
+              </div>
+              <span class="sr" id="description"
+                >Explore conceptual reach in Points or Surface views. Model
+                Training shows five illustrative changes during learning. Model
+                Comparison contrasts two fictional models. One Person / Society
+                separates individual knowledge, a living collective, and
+                external memory. The geometry is a metaphor, not measured data.
+                Drag to orbit, scroll to zoom, and use the labeled controls to
+                explore.</span
+              >
+            </div>
+            <div class="controls">
+              <div
+                class="view-switch"
+                role="group"
+                aria-label="Experience"
+                hidden
+              >
+                <button type="button" id="comparison-mode" aria-pressed="true">
+                  Compare models</button
+                ><button type="button" id="training-mode" aria-pressed="false">
+                  Training story
+                </button>
+              </div>
+              <div class="view-switch" role="group" aria-label="Representation">
+                <button type="button" id="points-view" aria-pressed="true">
+                  Points</button
+                ><button type="button" id="surface-view" aria-pressed="false">
+                  Surface</button
+                ><span>Same space · same camera</span>
+              </div>
+              <div id="comparison-controls">
+                <div
+                  class="model-switch"
+                  role="group"
+                  aria-label="Model selection"
+                >
+                  <button type="button" data-model="a" aria-pressed="false">
+                    Model A</button
+                  ><button type="button" data-model="b" aria-pressed="false">
+                    Model B</button
+                  ><button type="button" data-model="both" aria-pressed="true">
+                    Both</button
+                  ><label for="region-filter"
+                    >Show
+                    <select id="region-filter">
+                      <option value="all">All regions</option>
+                      <option value="2">Shared reach</option>
+                      <option value="0">A only</option>
+                      <option value="1">B only</option>
+                    </select></label
+                  >
+                </div>
+                <p class="comparison-note">
+                  Illustrative models · shared coordinates · brightness and
+                  point concentration suggest density
+                </p>
+              </div>
+              <div id="society-controls" hidden>
+                <div
+                  class="model-switch"
+                  role="group"
+                  aria-label="Knowledge scope"
+                >
+                  <button type="button" data-scope="person" aria-pressed="true">
+                    One person</button
+                  ><button
+                    type="button"
+                    data-scope="society"
+                    aria-pressed="false"
+                  >
+                    Society</button
+                  ><button type="button" data-scope="both" aria-pressed="false">
+                    Together
+                  </button>
+                </div>
+                <label class="memory-toggle"
+                  ><input id="external-memory" type="checkbox" />Include
+                  external memory
+                  <span>Records, tools &amp; institutions</span></label
+                >
+              </div>
+              <div id="training-controls" hidden>
+                <div class="timeline-head">
+                  <label for="training">Training progression</label
+                  ><span id="phase" aria-live="polite">Early training</span>
+                </div>
+                <div class="transport">
+                  <button type="button" id="play">Pause</button
+                  ><input
+                    id="training"
+                    aria-label="Illustrative training progression"
+                    type="range"
+                    min="0"
+                    max="1000"
+                    value="160"
+                  />
+                </div>
+                <div
+                  class="chapters"
+                  role="group"
+                  aria-label="Training chapters"
+                >
+                  <button type="button" data-chapter="0">1 · Emerge</button
+                  ><button type="button" data-chapter="1">2 · Connect</button
+                  ><button type="button" data-chapter="2">3 · Enrich</button
+                  ><button type="button" data-chapter="3">4 · Fill gaps</button
+                  ><button type="button" data-chapter="4">5 · Fine-tune</button>
+                </div>
+              </div>
+              <div class="footer">
+                <span>Illustrative, not measured</span
+                ><label
+                  ><input
+                    type="checkbox"
+                    id="rotate"
+                    checked
+                  />Auto-orbit</label
+                ><span>Drag to orbit · scroll to zoom</span>
+              </div>
+            </div>
+          </div>
+          <aside class="story-panel" aria-label="Scenario guide">
+            <div class="story-topline">
+              <span class="kicker">A GUIDED PERSPECTIVE</span
+              ><span id="story-count">01 / 05</span>
+            </div>
+            <h2 id="story-title">Islands emerge</h2>
+            <p id="story-copy"></p>
+            <div class="story-actions">
+              <button type="button" id="story-play" class="primary-link">
+                Play story <span aria-hidden="true">▶</span></button
+              ><button
+                type="button"
+                id="story-next"
+                class="next-button"
+                aria-label="Next story moment"
+              >
+                →
+              </button>
+            </div>
+            <div
+              id="story-steps"
+              class="story-steps"
+              role="group"
+              aria-label="Story moments"
+            ></div>
+            <div class="notice">
+              <span class="kicker">LOOK CLOSER</span>
+              <p id="story-notice"></p>
+            </div>
+            <button type="button" id="free-explore" class="text-button">
+              Explore freely ↗
+            </button>
+            <details class="assumptions">
+              <summary>How to read this scene</summary>
+              <p id="scenario-assumptions"></p>
+              <p>
+                These shapes are illustrative. Their sizes, positions, and
+                densities are not measurements.
+              </p>
+            </details>
+          </aside>
         </div>
-      </div>
-    </div>
+        <div class="viewer-end">
+          <span>There’s more than one way to see it.</span
+          ><a href="#explore">Choose another perspective →</a>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <a class="brand" href="#explore">Concept Space</a
+      ><span>A visual language for questions worth exploring.</span
+      ><a
+        href="https://github.com/shiftynick/concept-space"
+        target="_blank"
+        rel="noopener"
+        >Open source ↗</a
+      >
+    </footer>
     <script src="vendor/three/three.min.js"></script>
     <script src="src/comparison.js"></script>
+    <script src="src/society.js"></script>
     <script src="src/app.js"></script>
+    <script src="src/site.js"></script>
   </body>
 </html>

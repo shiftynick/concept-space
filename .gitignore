@@ -11,3 +11,6 @@ __pycache__/
 !.env.example
 .vscode/
 .idea/
+
+# Packaged static site
+/dist/

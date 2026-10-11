@@ -2,9 +2,9 @@
 
 An interactive visual language for exploring concepts, model reach, and learning.
 
-The enclosing sphere represents the space of all possible ideas. An irregular subset represents a model’s conceptual reach, including possibilities it has never actually produced. The same space can be viewed as a surface or as a point cloud, with a shared camera and training timeline.
+An exhibit-style Explore page leads into three guided perspectives: **How a Model Learns**, **Different Minds, Shared Ground**, and **One Person / Society**. Each scene can be viewed as a surface or as a point cloud. Guided stories and direct controls share the same scene and camera.
 
-**This is a teaching metaphor, not a measurement of any real model.** Geometry, density, positions, and training behavior are illustrative. Density is an exploratory representation of internal richness; it does not measure confidence or prompt history.
+**This is a teaching metaphor, not a measurement of any real model, person, or society.** Geometry, density, positions, and training behavior are illustrative. Density is an exploratory representation of internal richness; it does not measure confidence or prompt history.
 
 ## Run locally
 
@@ -18,16 +18,29 @@ Open <http://localhost:8000>. A browser with WebGL support is required. Three.js
 
 ## Compare models
 
-The prototype opens in **Compare models** mode. Model A has broader overall reach. Model B is smaller, with a lower-right specialty beyond A’s reach. These are fictional models on the same coordinate system.
+Choose **Different minds, shared ground** from Explore, or open `/#comparison`. Model A has broader overall reach. Model B is smaller, with a lower-right specialty beyond A’s reach. These are fictional models on the same coordinate system.
 
 - Select **Model A**, **Model B**, or **Both** while retaining the camera and representation.
 - In **Both**, cyan means A-only, amber means B-only, and lavender means shared reach. Shared samples are counted once rather than overlaid twice. Both uses the higher of the two illustrative density values at each shared sample.
 - Use **Show** to isolate shared reach or either model’s unique territory.
 - Switch A/B while showing **Shared reach** to compare internal density in the same territory. The Shared reach filter stays selected when switching models. An incompatible exclusive-region filter resets to All regions.
 - Surface mode shows the exterior of the selected region. Interior overlap can be hidden in the combined exterior; the Shared reach filter reveals that overlap directly.
-- Choose **Training story** to return to the original five-chapter sequence. Training position and camera survive mode changes; switching experiences pauses playback.
+- Use **Change perspective** or **All perspectives** to choose another scenario. Switching scenarios pauses playback and starts its guide at the first moment. The camera and representation are preserved.
 
-## Explore
+## One person / society
+
+Open `/#society` for three moments: one person’s reach, knowledge distributed across living people, and external memory in records, tools, and institutions.
+
+- The depicted person is included within the living collective.
+- **One person**, **Society**, and **Together** change which perspective is emphasized.
+- **Include external memory** reveals an optional violet layer, separate from the living collective.
+- Society does not imply one mind that can access everything. Retaining a concept in a record does not guarantee retrieval or understanding.
+- Surface mode uses a translucent collective boundary to keep the person visible inside it.
+
+## Guided and free exploration
+
+The site opens on Explore. All three scenarios have a guided story with play/pause, next, and selectable moments. **Explore freely** pauses the story and focuses the scene controls. Direct links use `/#training`, `/#comparison`, and `/#society`. The About section explains the visual metaphor.
+
 
 - Switch between **Points** and **Surface** without changing the camera or training position.
 - Drag to orbit; scroll to zoom. Toggle auto-orbit to hold the view still.
@@ -47,11 +60,16 @@ Point concentration conveys illustrative density directly; surface brightness pr
 ## Project layout
 
 ```text
-index.html                  Main prototype
+index.html                  Explore gallery and scenario viewer
 src/app.js                  Shared field, rendering, interaction, and training story
-src/styles.css              Standalone presentation and responsive layout
+src/styles.css              Core scene controls
+src/site.css                Exhibit layout, responsive gallery, and narrative rail
+src/site.js                 Hash routes, guided stories, and procedural preview art
+src/society.js              Individual, living collective, and external memory
 src/comparison.js           Fictional model fields, overlap, and density comparison
-tests/comparison.test.cjs    Comparison behavior checks
+tests/                      Comparison and society behavior checks
+scripts/build-site.cjs      Static deployment packaging
+.openai/hosting.json        Sites project identity and output configuration
 experiments/                Earlier surface, luminous-density, and point-cloud studies
 vendor/three/               Three.js 0.160.1 and its MIT license
 ```
@@ -69,15 +87,22 @@ Edit the files directly and refresh the browser. Check JavaScript syntax with:
 ```sh
 node --check src/app.js
 node --check src/comparison.js
-node --test tests/comparison.test.cjs
+node --check src/site.js
+node --check src/society.js
+node --test tests/*.test.cjs
 ```
 
 The main scene samples one signed field for both point occupancy and surface extraction. A seeded point distribution keeps samples stable across training states. Surface geometry is rebuilt only when needed; the enrichment chapter changes density without rebuilding the boundary.
 
-The browser exposes `window.ideaStudy` for inspection, with `setProgress(0…1)`, `setView('points' | 'surface')`, `setMode('training' | 'comparison')`, `setModel('a' | 'b' | 'both')`, `getState()`, and `sampleField(x, y, z)`. Comparison fields and density functions are available through `ideaStudy.comparison`.
+The browser exposes `window.ideaStudy` for inspection, with `setProgress(0…1)`, `setView('points' | 'surface')`, `setMode('training' | 'comparison' | 'society')`, `setModel('a' | 'b' | 'both')`, `getState()`, and `sampleField(x, y, z)`. Comparison fields and density functions are available through `ideaStudy.comparison`. The society scenario exposes `setSociety({scope, memory})` and `ideaStudy.society`. The site guide exposes `window.conceptSite` for local inspection.
+
+## Static deployment
+
+Run `node scripts/build-site.cjs` to copy the application and experiments into `dist/`. The site remains buildless for local use; this step only assembles a hosting artifact. The managed Sites deployment is owner-private unless its audience is explicitly changed. GitHub remains the public source repository.
 
 ## Directions to explore
 
+- Society’s conceptual reach changing over time: loss, preservation, diffusion, and rediscovery.
 - More expressive geometry, transitions, and an opening reveal.
 - More comparison narratives, with semantic examples for shared and specialized regions.
 - Explored versus unexplored possibilities within a model’s reachable space.

@@ -358,6 +358,13 @@
       extractSurface: buildSurface,
       dpr: renderer.getPixelRatio(),
     });
+    const society = window.createSociety({
+      THREE,
+      world,
+      candidates,
+      extractSurface: buildSurface,
+      dpr: renderer.getPixelRatio(),
+    });
     function syncGeometry(force = false) {
       const key = configure(t);
       uniforms.uEnrich.value = enrich;
@@ -407,6 +414,10 @@
       return Math.min(4, Math.floor(t * 5));
     }
     function updateUI() {
+      if (mode === "society") {
+        societyUI();
+        return;
+      }
       root.querySelector("#model-legend").hidden = mode !== "comparison";
       legend.parentElement.hidden = mode === "comparison";
       if (mode === "comparison") {
@@ -464,12 +475,55 @@
       );
       filterSelect.value = state.filter;
     }
+    const scopeButtons = [...root.querySelectorAll("[data-scope]")],
+      memoryInput = root.querySelector("#external-memory");
+    function societyUI() {
+      const state = society.getState();
+      legend.parentElement.hidden = true;
+      const ml = root.querySelector("#model-legend");
+      ml.hidden = false;
+      ml.innerHTML =
+        state.scope === "person"
+          ? '<span><i class="swatch-b"></i>One person</span>'
+          : state.scope === "society"
+            ? '<span><i class="swatch-a"></i>Living collective</span>'
+            : '<span><i class="swatch-b"></i>One person</span><span><i class="swatch-a"></i>Living collective</span>';
+      if (state.memory && state.scope !== "person")
+        ml.innerHTML +=
+          '<span><i class="swatch-shared"></i>External memory</span>';
+      chapter.textContent =
+        state.scope === "person"
+          ? "A personal constellation"
+          : state.memory
+            ? "Beyond living memory"
+            : "No one carries it all";
+      event.textContent =
+        state.scope === "person"
+          ? "A small, uneven collection of concepts and connections."
+          : state.memory
+            ? "Records and tools preserve concepts beyond any one mind."
+            : "Knowledge is distributed across many people.";
+      scopeButtons.forEach((b) =>
+        b.setAttribute("aria-pressed", String(b.dataset.scope === state.scope)),
+      );
+      memoryInput.checked = state.memory;
+      memoryInput.disabled = state.scope === "person";
+    }
+    function setSociety(next) {
+      society.update(next);
+      updateUI();
+    }
+    scopeButtons.forEach(
+      (b) => (b.onclick = () => setSociety({ scope: b.dataset.scope })),
+    );
+    memoryInput.onchange = () => setSociety({ memory: memoryInput.checked });
     function setMode(next) {
-      if (!["training", "comparison"].includes(next)) return;
+      if (!["training", "comparison", "society"].includes(next)) return;
       mode = next;
       playing = false;
       points.visible = mode === "training" && view === "points";
       mesh.visible = mode === "training" && view === "surface";
+      root.querySelector("#society-controls").hidden = mode !== "society";
       root.querySelector("#training-controls").hidden = mode !== "training";
       root.querySelector("#comparison-controls").hidden = mode !== "comparison";
       root
@@ -480,8 +534,13 @@
         .setAttribute("aria-pressed", String(mode === "comparison"));
       root.querySelector(".eyebrow").textContent =
         "Concept Space / " +
-        (mode === "comparison" ? "model comparison" : "training story");
+        (mode === "comparison"
+          ? "model comparison"
+          : mode === "society"
+            ? "people & collective knowledge"
+            : "training story");
       comparison.update({ active: mode === "comparison", view });
+      society.update({ active: mode === "society", view });
       syncGeometry();
       updateUI();
     }
@@ -510,6 +569,7 @@
       points.visible = mode === "training" && view === "points";
       mesh.visible = mode === "training" && view === "surface";
       comparison.update({ view });
+      society.update({ view });
       pointButton.setAttribute("aria-pressed", String(view === "points"));
       surfaceButton.setAttribute("aria-pressed", String(view === "surface"));
       syncGeometry();
@@ -559,6 +619,7 @@
       { passive: false },
     );
     function resize() {
+      if (!holder.clientWidth || !holder.clientHeight) return;
       renderer.setSize(holder.clientWidth, holder.clientHeight);
       camera.aspect = holder.clientWidth / holder.clientHeight;
       camera.updateProjectionMatrix();
@@ -586,7 +647,18 @@
                     : []),
                 ];
       const specs =
-        mode === "comparison" ? cmpSpecs : labelSpecs[chapterIndex()];
+        mode === "society"
+          ? society.getState().scope === "person"
+            ? [{ text: "One person", p: [-0.28, 0.3, 0.2] }]
+            : [
+                { text: "Living collective", p: [-0.14, 0.52, 0.15] },
+                ...(society.getState().memory
+                  ? [{ text: "External memory", p: [0.55, 0.51, 0.16] }]
+                  : []),
+              ]
+          : mode === "comparison"
+            ? cmpSpecs
+            : labelSpecs[chapterIndex()];
       labels.forEach((label, i) => {
         const spec = specs[i];
         label.hidden = !spec;
@@ -602,12 +674,24 @@
         label.style.top =
           Math.max(125, Math.min(holder.clientHeight - 110, y)) + "px";
       });
+      if (!labels[0].hidden && !labels[1].hidden) {
+        const a = labels[0].getBoundingClientRect(),
+          b = labels[1].getBoundingClientRect();
+        if (
+          a.left < b.right + 5 &&
+          a.right + 5 > b.left &&
+          a.top < b.bottom + 5 &&
+          a.bottom + 5 > b.top
+        )
+          labels[1].style.top = parseFloat(labels[1].style.top) + 25 + "px";
+      }
     }
     function animate(now) {
       requestAnimationFrame(animate);
       const dt = Math.min((now - lastFrame) / 1000, 0.08);
       lastFrame = now;
-      if (document.hidden) return;
+      if (document.hidden || document.getElementById("viewer-screen")?.hidden)
+        return;
       if (playing && mode === "training") {
         t = Math.min(1, t + dt / 50);
         if (t === 1) playing = false;
@@ -639,6 +723,13 @@
       setView,
       setMode,
       setModel,
+      setSociety,
+      society,
+      resize,
+      pause() {
+        playing = false;
+        updateUI();
+      },
       comparison,
       getState() {
         let active = 0;
@@ -653,6 +744,7 @@
         return {
           mode,
           comparison: comparison.getState(),
+          society: society.getState(),
           progress: t,
           chapter: chapterIndex(),
           view,
