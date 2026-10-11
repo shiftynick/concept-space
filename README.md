@@ -25,7 +25,7 @@ Open `/#encounter` for a fictional encounter between Mara and Eli. Teal is Mara-
 - **Misunderstanding:** attention moves to two different regions. Dimming is a focus cue, not a loss of conceptual reach.
 - **Discovery:** paths converge on a region outside both original spaces. This is an illustrative outcome, not a prediction about conversations.
 
-Points and Surface use the same fields and preserve the current moment. Collapse the story or scene controls to clear the view. On narrow screens, the camera composition leaves room for the narrative; the panels remain independently scrollable. Scene notes track world coordinates during orbit, hide when the target rotates behind the scene, and can be toggled off.
+Points and Surface use the same fields and preserve the current moment. In landscape, the story and scene controls occupy vertical glass panels on the left and right, keeping the middle open from top to bottom. Collapse either panel to clear the view. On narrow screens, the camera composition leaves room for the narrative; the panels remain independently scrollable. Scene notes track world coordinates during orbit, hide when the target rotates behind the scene, and can be toggled off.
 
 ## Compare models
 
