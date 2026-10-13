@@ -22,7 +22,7 @@ Open `/#encounter` for a fictional encounter between Mara and Eli. Teal is Mara-
 
 - **Shared ground:** an overlap gives them a place to begin.
 - **Teaching:** Eli gains access to a part of Mara’s existing territory. The region becomes shared; Mara does not lose it.
-- **Misunderstanding:** attention moves to two different regions. Dimming is a focus cue, not a loss of conceptual reach.
+- **Misunderstanding:** attention moves to two different regions. A common utterance forks toward separate attention rings; the surrounding reach remains visible.
 - **Discovery:** paths converge on a region outside both original spaces. This is an illustrative outcome, not a prediction about conversations.
 
 Points and Surface use the same fields and preserve the current moment. In landscape, the story and scene controls occupy vertical glass panels on the left and right, keeping the middle open from top to bottom. Collapse either panel to clear the view. On narrow screens, the camera composition leaves room for the narrative; the panels remain independently scrollable. Scene notes track world coordinates during orbit, hide when the target rotates behind the scene, and can be toggled off.
@@ -32,10 +32,10 @@ Points and Surface use the same fields and preserve the current moment. In lands
 Choose **Different minds, shared ground** from Explore, or open `/#comparison`. Model A has broader overall reach. Model B is smaller, with a lower-right specialty beyond A’s reach. These are fictional models on the same coordinate system.
 
 - Select **Model A**, **Model B**, or **Both** while retaining the camera and representation.
-- In **Both**, cyan means A-only, amber means B-only, and lavender means shared reach. Shared samples are counted once rather than overlaid twice. Both uses the higher of the two illustrative density values at each shared sample.
+- In **Both**, cyan means A-only, amber means B-only, and pale green means shared reach. Shared samples are counted once rather than overlaid twice. Both uses the higher of the two illustrative density values at each shared sample.
 - Use **Show** to isolate shared reach or either model’s unique territory.
 - Switch A/B while showing **Shared reach** to compare internal density in the same territory. The Shared reach filter stays selected when switching models. An incompatible exclusive-region filter resets to All regions.
-- Surface mode shows the exterior of the selected region. Interior overlap can be hidden in the combined exterior; the Shared reach filter reveals that overlap directly.
+- In Both / All regions, surface mode shows translucent model envelopes around a solid pale-green shared interior. Region filters isolate the exact shared or unique territory.
 - Use **Change perspective** or **All perspectives** to choose another scenario. Switching scenarios pauses playback and starts its guide at the first moment. The camera and representation are preserved.
 
 ## One person / society
@@ -66,7 +66,7 @@ The five training chapters are deliberately distinct:
 4. **Fill gaps:** one opening closes while another remains open.
 5. **Fine-tune:** one region expands while another recedes.
 
-Point concentration conveys illustrative density directly; surface brightness provides a corresponding visual cue. These are two renderings of the same procedural field.
+Point concentration conveys illustrative internal richness. Surface lighting describes shape, not a density measurement. Enrichment includes a fixed before/now detail sampled from the same left-region slice, making the density change inspectable without changing reach. These are two renderings of the same procedural field.
 
 ## Project layout
 
@@ -127,3 +127,9 @@ The current prototype intentionally focuses on the visual metaphor. There is no 
 ## Third-party code
 
 Three.js is included under its [MIT license](vendor/three/LICENSE). No project-wide license has been selected yet.
+
+## Everything Is Search — next direction
+
+The next concept explores the adjacent possible through tangible local changes that zoom outward into larger histories, with biological evolution, culture/society, and neural-network training as anchors. A progressive website and documentary are eventual goals; the current phase is conceptual and narrative development.
+
+Start with the [independent-continuation handoff](docs/everything-is-search/HANDOFF.md) or the [working documents](docs/everything-is-search/README.md).

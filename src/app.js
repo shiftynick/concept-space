@@ -181,7 +181,7 @@
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
-        vertexShader: `attribute float aSeed;attribute float aFocus;attribute float aCore;uniform float uEnrich;uniform float uFine;uniform float uDpr;varying float vA;void main(){float density=.28+.16*aCore+.51*uEnrich*aFocus;float visible=smoothstep(aSeed-.025,aSeed+.025,density);vA=visible*.8;vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=clamp(1.9*uDpr*4./(-p.z),1.,9.);}`,
+        vertexShader: `attribute float aSeed;attribute float aFocus;attribute float aCore;uniform float uEnrich;uniform float uFine;uniform float uDpr;varying float vA;void main(){float density=.16+.12*aCore+.72*uEnrich*aFocus;float visible=smoothstep(aSeed-.025,aSeed+.025,density);vA=visible*.8;vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=clamp(1.9*uDpr*4./(-p.z),1.,9.);}`,
         fragmentShader: `varying float vA;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;float a=vA*(1.-smoothstep(.35,1.,r));if(a<.002)discard;gl_FragColor=vec4(.38,.89,.94,a);}`,
       }),
     );
@@ -379,11 +379,36 @@
     function setSceneNote(note) {
       sceneNote = note;
       noteElement.hidden = !note;
-      noteLeader.hidden = !note;
+      noteLeader.toggleAttribute("hidden", !note);
       if (note) {
         noteElement.querySelector("strong").textContent = note.title;
         noteElement.querySelector("span").textContent = note.text;
       }
+    }
+    const densityDetail = document.createElement('div');
+    densityDetail.className = 'density-detail';
+    densityDetail.hidden = true;
+    densityDetail.innerHTML = '<strong>Same reach · richer within</strong><div class="density-pair"><figure><svg viewBox="0 0 120 100" role="img" aria-label="Left region before enrichment"></svg><figcaption>Before</figcaption></figure><figure><svg viewBox="0 0 120 100" role="img" aria-label="Same region with richer representation"></svg><figcaption>Now</figcaption></figure></div><small>Fixed view of the left region · same sampled territory</small>';
+    // Keep the comparison near the narrative even if its markup changes.
+    document.querySelector('#story-notice').after(densityDetail);
+    let detailKey = '';
+    function updateDensityDetail() {
+      densityDetail.hidden = mode !== 'training' || t < .4 || t >= .6;
+      if (densityDetail.hidden) return;
+      const key = enrich.toFixed(2);
+      if (key === detailKey) return;
+      detailKey = key;
+      const g = points.geometry, before = [], after = [];
+      for (let i=0; i<g.attributes.position.count; i++) {
+        const x=g.attributes.position.getX(i), y=g.attributes.position.getY(i), z=g.attributes.position.getZ(i);
+        if (x < -.66 || x > -.03 || y < -.18 || y > .46 || Math.abs(z-.04) > .07) continue;
+        const seed=g.attributes.aSeed.array[i], base=.16+.12*g.attributes.aCore.array[i];
+        const dot='<circle cx="'+((x+.66)/.63*110+5).toFixed(1)+'" cy="'+(95-(y+.18)/.64*90).toFixed(1)+'" r=".8" />';
+        if(seed<base) before.push(dot);
+        if(seed<base+.72*enrich*g.attributes.aFocus.array[i]) after.push(dot);
+      }
+      const panes=densityDetail.querySelectorAll('svg');
+      panes[0].innerHTML=before.join(''); panes[1].innerHTML=after.join('');
     }
     function syncGeometry(force = false) {
       const key = configure(t);
@@ -402,6 +427,7 @@
         mesh.geometry = buildSurface();
         surfaceKey = key;
       }
+      updateDensityDetail();
     }
     const titles = [
       "Islands emerge",
@@ -452,8 +478,8 @@
       );
       legend.textContent =
         view === "points"
-          ? "Point concentration = illustrative density"
-          : "Surface brightness = illustrative density";
+          ? "Point concentration = illustrative richness"
+          : "Surface = extent of reach · lighting shows shape";
     }
     const modelButtons = [...root.querySelectorAll("[data-model]")];
     const filterSelect = root.querySelector("#region-filter");
@@ -473,7 +499,9 @@
       modelLegend.hidden = false;
       modelLegend.innerHTML =
         state.selection === "both"
-          ? '<span><i class="swatch-a"></i>A only</span><span><i class="swatch-b"></i>B only</span><span><i class="swatch-shared"></i>Shared</span>'
+          ? (view === "surface" && state.filter === "all"
+            ? '<span><i class="swatch-a"></i>A envelope</span><span><i class="swatch-b"></i>B envelope</span><span><i class="swatch-shared"></i>Shared interior</span>'
+            : '<span><i class="swatch-a"></i>A only</span><span><i class="swatch-b"></i>B only</span><span><i class="swatch-shared"></i>Shared</span>')
           : state.selection === "a"
             ? '<span><i class="swatch-a"></i>Model A</span>'
             : '<span><i class="swatch-b"></i>Model B</span>';
@@ -672,7 +700,7 @@
         label.hidden = true;
       });
       if (!sceneNote || !notesToggle.checked) {
-        noteElement.hidden = noteLeader.hidden = true;
+        noteElement.hidden = true; noteLeader.setAttribute("hidden", "");
         return;
       }
       const target = new THREE.Vector3(...sceneNote.p).applyMatrix4(
@@ -684,7 +712,7 @@
         Math.abs(p.x) < 0.98 &&
         Math.abs(p.y) < 0.95 &&
         p.z < 1;
-      noteElement.hidden = noteLeader.hidden = !visible;
+      noteElement.hidden = !visible; noteLeader.toggleAttribute("hidden", !visible);
       if (!visible) return;
       const w = holder.clientWidth,
         h = holder.clientHeight;
@@ -692,14 +720,16 @@
         y = (-p.y * 0.5 + 0.5) * h;
       const nw = noteElement.offsetWidth,
         nh = noteElement.offsetHeight;
-      const left = Math.max(
-        12,
-        Math.min(w - nw - 12, x + (x < w * 0.5 ? 40 : -nw - 40)),
-      );
-      const top = Math.max(
-        w <= 600 ? 185 : 96,
-        Math.min(h - nh - 20, y - nh - 30),
-      );
+      const bounds = holder.getBoundingClientRect();
+      const blockers = [...root.querySelectorAll('.model-legend, .legend'),
+        document.querySelector('.cinematic-story'), document.querySelector('.scene-tools')]
+        .filter(el => el && !el.hidden && el.getClientRects().length)
+        .map(el => { const r = el.getBoundingClientRect(); return {left:r.left-bounds.left,top:r.top-bounds.top,right:r.right-bounds.left,bottom:r.bottom-bounds.top}; });
+      const candidates = [[x+48,y+34],[x-nw-48,y+34],[x+48,y-nh-34],[x-nw-48,y-nh-34]]
+        .map(([l,t]) => ({left:Math.max(12,Math.min(w-nw-12,l)),top:Math.max(170,Math.min(h-nh-24,t))}));
+      const placement = candidates.find(p => !blockers.some(r => p.left < r.right+12 && p.left+nw > r.left-12 && p.top < r.bottom+12 && p.top+nh > r.top-12));
+      if (!placement) { noteElement.hidden = true; noteLeader.setAttribute("hidden", ""); return; }
+      const {left, top} = placement;
       noteElement.style.left = left + "px";
       noteElement.style.top = top + "px";
       noteLeader.setAttribute("viewBox", `0 0 ${w} ${h}`);
@@ -708,7 +738,7 @@
       line.setAttribute("x1", x);
       line.setAttribute("y1", y);
       line.setAttribute("x2", Math.max(left, Math.min(left + nw, x)));
-      line.setAttribute("y2", top + nh);
+      line.setAttribute("y2", Math.max(top, Math.min(top + nh, y)));
       dot.setAttribute("cx", x);
       dot.setAttribute("cy", y);
     }
@@ -766,9 +796,9 @@
         const g = points.geometry;
         for (let i = 0; i < g.attributes.aSeed.count; i++) {
           const d =
-            0.28 +
-            0.16 * g.attributes.aCore.array[i] +
-            0.51 * enrich * g.attributes.aFocus.array[i];
+            0.16 +
+            0.12 * g.attributes.aCore.array[i] +
+            0.72 * enrich * g.attributes.aFocus.array[i];
           if (g.attributes.aSeed.array[i] < d) active++;
         }
         return {

@@ -90,17 +90,13 @@ window.createEncounter = function ({
   const shared = {
     uLearn: { value: 0 },
     uDiscover: { value: 0 },
-    uMismatch: { value: 0 },
-    uFocus: { value: 1 },
   };
-  const shade = `uniform vec3 uColor;uniform float uLayer;uniform float uLearn;uniform float uDiscover;uniform float uMismatch;uniform float uFocus;varying vec3 vP;
+  const shade = `uniform vec3 uColor;uniform float uLayer;uniform float uLearn;uniform float uDiscover;varying vec3 vP;
     vec4 appearance(){vec3 col=uColor;float a=.64;
     if(uLayer>2.5&&uLayer<3.5){float learned=smoothstep(0.,.12,uLearn-clamp((-vP.x+.02)/.48,0.,1.));col=mix(col,vec3(.86,.92,.69),learned);a+=learned*.35;}
     if(uLayer>3.5){float reveal=smoothstep(0.,.1,uDiscover-clamp((vP.y-.49)/.32,0.,1.));a*=reveal;}
-    if(uLayer>1.5&&uLayer<2.5)a+=uFocus*.32;
-    float left=exp(-dot(vP-vec3(-.45,-.24,.04),vP-vec3(-.45,-.24,.04))*85.);
-    float right=exp(-dot(vP-vec3(.47,.34,-.04),vP-vec3(.47,.34,-.04))*85.);
-    a*=mix(1.,.20+1.2*max(left,right),uMismatch);return vec4(col,a);}`;
+    if(uLayer>1.5&&uLayer<2.5)a+=.32;
+    return vec4(col,a);}`;
   function material(layer, surface = false) {
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -138,12 +134,12 @@ window.createEncounter = function ({
     ],
     [
       [-0.04, -0.06, 0.15],
-      [-0.18, -0.11, 0.28],
+      [-0.48, 0.15, 0.28],
       [-0.45, -0.24, 0.1],
     ],
     [
       [-0.04, -0.06, 0.15],
-      [0.3, 0.09, 0.3],
+      [0.08, 0.48, 0.3],
       [0.47, 0.34, 0.04],
     ],
     [
@@ -171,6 +167,14 @@ window.createEncounter = function ({
     group.add(o);
     return o;
   });
+  // A shared utterance forks toward separate attention targets; reach stays visible.
+  const attention = [[-.04,-.06,.15],[-.45,-.24,.1],[.47,.34,.04]].map((p,i) => {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(i ? .047 : .019, i ? .054 : .026, 48),
+      new THREE.MeshBasicMaterial({color: i === 1 ? colors[0] : i === 2 ? colors[1] : colors[2], side: THREE.DoubleSide, transparent:true, depthWrite:false}));
+    ring.position.set(...p);
+    group.add(ring);
+    return ring;
+  });
   let step = 0,
     progress = 1,
     view = "points",
@@ -182,8 +186,6 @@ window.createEncounter = function ({
     if (next.active !== undefined) group.visible = next.active;
     shared.uLearn.value = step === 0 ? 0 : step === 1 ? progress * 1.15 : 1.15;
     shared.uDiscover.value = step === 3 ? progress * 1.15 : 0;
-    shared.uMismatch.value = step === 2 ? progress : 0;
-    shared.uFocus.value = step === 0 ? progress : 0;
     if (view === "surface" && group.visible && !meshes)
       meshes = fields.map((f, i) => {
         const o = new THREE.Mesh(extractSurface(f), material(i, true));
@@ -196,6 +198,7 @@ window.createEncounter = function ({
     meshes?.forEach((o, i) => {
       o.visible = view === "surface" && (i !== 4 || step === 3);
     });
+    attention.forEach((o) => { o.visible = step === 2; o.material.opacity = progress; });
     paths.forEach((o, i) => {
       o.visible =
         (i === 0 && step === 1) ||

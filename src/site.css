@@ -2128,3 +2128,17 @@ body.viewer-open {
     right: calc(var(--rail-inset) + var(--tools-rail) + 14px);
   }
 }
+
+/* Keep shared membership consistent across scenarios and leaders above the canvas. */
+.swatch-shared { background: #dcebb1 !important; }
+.note-leader { z-index: 3; }
+.scene-note { z-index: 4; width: 166px; }
+.universe-label { max-width: calc(100% - 40px); text-align: center; }
+
+.density-detail { margin-top: 18px; padding: 12px; border: 1px solid #b8d4d12d; border-radius: 9px; background: #07161d99; }
+.density-detail strong { color: #dcebb1; font-size: 11px; font-weight: 500; }
+.density-pair { display: flex; gap: 12px; margin: 9px 0; }
+.density-pair figure { flex: 1; margin: 0; min-width: 0; }
+.density-pair svg { width: 100%; display: block; fill: #69e3d5; border: 1px solid #719b9c44; border-radius: 6px; }
+.density-pair figcaption, .density-detail small { color: #a9bdc3; font-size: 10px; line-height: 1.4; }
+.stage .universe-label { white-space: normal; width: max-content; max-width: min(620px, calc(100% - 48px)); }

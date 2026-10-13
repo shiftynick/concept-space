@@ -12,7 +12,7 @@ window.createComparison = function ({
   const palette = [
     new THREE.Color("#59dbe8"),
     new THREE.Color("#ffb66e"),
-    new THREE.Color("#d6c9ff"),
+    new THREE.Color("#dcebb1"),
   ];
   const aLobes = [
     [-0.34, 0.13, 0.04, 0.33],
@@ -120,10 +120,13 @@ window.createComparison = function ({
         uColor: { value: palette[0].clone() },
         uModel: { value: 2 },
         uCategorical: { value: 0 },
+        uOpacity: { value: 1 },
       },
       vertexShader: `attribute vec3 aColor;varying vec3 vColor;varying vec3 vN;varying vec3 vP;void main(){vColor=aColor;vN=normalize(normalMatrix*normal);vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-      fragmentShader: `uniform vec3 uColor;uniform float uModel;uniform float uCategorical;varying vec3 vColor;varying vec3 vN;varying vec3 vP;void main(){float a=.25+.65*exp(-dot(vP-vec3(-.25,.14,.04),vP-vec3(-.25,.14,.04))*16.);float b=.28+.65*exp(-dot(vP-vec3(.2,-.1,.04),vP-vec3(.2,-.1,.04))*20.);float d=uModel<.5?a:uModel<1.5?b:max(a,b);float light=.42+.75*max(dot(normalize(vN),normalize(vec3(-.7,1.,1.))),0.);gl_FragColor=vec4(mix(uColor,vColor,uCategorical)*light*(.8+.5*d),1.);}`,
-      side: THREE.DoubleSide,
+      fragmentShader: `uniform vec3 uColor;uniform float uModel;uniform float uCategorical;uniform float uOpacity;varying vec3 vColor;varying vec3 vN;varying vec3 vP;void main(){float a=.25+.65*exp(-dot(vP-vec3(-.25,.14,.04),vP-vec3(-.25,.14,.04))*16.);float b=.28+.65*exp(-dot(vP-vec3(.2,-.1,.04),vP-vec3(.2,-.1,.04))*20.);float d=uModel<.5?a:uModel<1.5?b:max(a,b);float light=.42+.75*max(dot(normalize(vN),normalize(vec3(-.7,1.,1.))),0.);gl_FragColor=vec4(mix(uColor,vColor,uCategorical)*light,uOpacity);}`,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.FrontSide,
     });
   }
   function makeSurface(field, categorical = false) {
@@ -174,14 +177,23 @@ window.createComparison = function ({
       clouds[i].material.uniforms.uModel.value = m;
       clouds[i].material.uniforms.uColor.value.copy(color);
       if (meshes) {
-        meshes[i].visible = included && view === "surface" && filter !== "all";
+        meshes[i].visible = included && view === "surface" && (filter !== "all" || (selection === "both" && i === 2));
+        meshes[i].material.uniforms.uOpacity.value = filter === "all" && selection === "both" && i !== 2 ? .18 : 1;
+        meshes[i].renderOrder = 1;
+        meshes[i].material.depthWrite = true;
         meshes[i].material.uniforms.uColor.value.copy(color);
         meshes[i].material.uniforms.uModel.value = m;
       }
     }
     if (fullMeshes)
       fullMeshes.forEach((mesh, i) => {
-        mesh.visible = view === "surface" && filter === "all" && i === m;
+        mesh.visible = view === "surface" && filter === "all" && (selection === "both" ? i < 2 : i === m);
+        mesh.material.uniforms.uOpacity.value = selection === "both" ? .16 : 1;
+        mesh.material.depthWrite = selection !== "both";
+        mesh.material.polygonOffset = true;
+        mesh.material.polygonOffsetFactor = 2;
+        mesh.material.polygonOffsetUnits = 2;
+        mesh.renderOrder = 2;
         mesh.material.uniforms.uModel.value = m;
         if (i !== 2) mesh.material.uniforms.uColor.value.copy(palette[i]);
       });

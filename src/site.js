@@ -23,7 +23,7 @@
         [
           "Richer, without larger",
           "Training can develop an existing region without extending its boundary. More is happening inside the same reach.",
-          "Switch to Points to see the left region become more densely represented.",
+          "Compare the left region before and after: more points, exactly the same reach.",
         ],
         [
           "One gap fills; one stays",
@@ -41,7 +41,7 @@
       title: "Different minds, shared ground",
       category: "MACHINE INTELLIGENCE / PERSPECTIVES",
       assumptions:
-        "Both fictional models use the same conceptual geography. Cyan, amber, and lavender distinguish A-only, B-only, and shared reach. Surface view shows exterior boundaries; filtering Shared reach reveals overlap that may be hidden inside.",
+        "Both fictional models use the same conceptual geography. Cyan, amber, and pale green distinguish A-only, B-only, and shared reach. In Surface, translucent model envelopes expose the solid shared interior.",
       steps: [
         [
           "A broader reach",
@@ -93,7 +93,7 @@
     title: "When two minds meet",
     category: "PEOPLE & CULTURE / HUMAN CONNECTION",
     assumptions:
-      "Mara and Eli are fictional people in a shared conceptual geography. Teal and violet distinguish their unique reach; pale green marks shared reach. A new connection changes what Eli can reach. Brighter regions depict attention, not greater ability. Discovery is an authored possibility, not a claim that every conversation expands knowledge.",
+      "Mara and Eli are fictional people in a shared conceptual geography. Teal and violet distinguish their unique reach; pale green marks shared reach. A new connection changes what Eli can reach. Rings mark attention without removing reachable territory. Discovery is an authored possibility, not a claim that every conversation expands knowledge.",
     steps: [
       [
         "Understanding starts with shared ground.",
@@ -107,8 +107,8 @@
       ],
       [
         "The same words can land elsewhere.",
-        "Eli connects the explanation to a different part of his experience. Two regions light up: both people are engaged, but they are following different meanings.",
-        "The two separate destinations. The dimmer territory is still reachable.",
+        "Eli connects the explanation to a different part of his experience. Two attention rings mark different destinations: both people are engaged, but they are following different meanings.",
+        "Follow the fork from the same words to two different attention rings. Their reach stays in place.",
       ],
       [
         "Together, they find another possibility.",
@@ -125,19 +125,15 @@
         text: "Two previously separate regions become reachable together.",
         p: [-0.02, -0.015, 0.12],
       },
-      {
-        title: "Richer, not larger",
-        text: "Density changes here. The boundary stays in place.",
-        p: [-0.38, 0.3, 0.23],
-      },
+      null, // The fixed density detail already supplies the comparison here.
       {
         title: "This gap remains",
-        text: "Learning closes one opening, but leaves this one intact.",
+        text: "Still outside this model’s reach.",
         p: [0.3, -0.17, 0.12],
       },
       {
         title: "A new emphasis",
-        text: "This region expands as a different region recedes.",
+        text: "Growing here; receding at lower left.",
         p: [0.52, 0.33, 0.13],
       },
     ],
@@ -178,7 +174,7 @@
       null,
       {
         title: "A new possibility",
-        text: "Outside both original spaces; now reachable together.",
+        text: "New ground, reachable by both.",
         p: [0, 0.65, 0.04],
       },
     ],
